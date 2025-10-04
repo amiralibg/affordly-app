@@ -10,24 +10,45 @@ import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/i18n';
 import { I18nManager } from 'react-native';
+import { useFonts, Vazirmatn_400Regular, Vazirmatn_700Bold } from '@expo-google-fonts/vazirmatn';
+import { Poppins_400Regular, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
   useFrameworkReady();
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const { theme } = useTheme();
 
+  const [fontsLoaded] = useFonts({
+    Vazirmatn_400Regular,
+    Vazirmatn_700Bold,
+    Poppins_400Regular,
+    Poppins_700Bold,
+  });
+
   useEffect(() => {
     checkAuth();
   }, []);
 
   useEffect(() => {
-    // Update RTL based on language
+    // Update RTL based on language on app start
     const isRTL = i18n.language === 'fa';
-    if (I18nManager.isRTL !== isRTL) {
-      I18nManager.allowRTL(isRTL);
-      I18nManager.forceRTL(isRTL);
-    }
+    I18nManager.allowRTL(isRTL);
+    I18nManager.forceRTL(isRTL);
   }, []);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <>

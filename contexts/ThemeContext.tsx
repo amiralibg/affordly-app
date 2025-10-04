@@ -43,6 +43,12 @@ export const TYPOGRAPHY = {
     normal: 1.5,
     relaxed: 1.75,
   },
+  families: {
+    default: 'Poppins_400Regular' as const,
+    defaultBold: 'Poppins_700Bold' as const,
+    persian: 'Vazirmatn_400Regular' as const,
+    persianBold: 'Vazirmatn_700Bold' as const,
+  },
 } as const;
 
 export const RADIUS = {

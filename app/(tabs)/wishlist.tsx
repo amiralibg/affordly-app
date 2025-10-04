@@ -19,14 +19,18 @@ import {
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function WishlistScreen() {
   const { data: products = [], isLoading } = useProducts();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { formatAmount } = useCurrency();
+  const fontRegular = useLocalizedFont('regular');
+  const fontBold = useLocalizedFont('bold');
+  const isRTL = i18n.language === 'fa';
 
   const wishlistItems = products.filter(p => p.isWishlisted);
   const totalSavedForWishlist = wishlistItems.reduce((sum, item) => sum + item.savedAmount, 0);
@@ -115,22 +119,22 @@ export default function WishlistScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>{t('wishlist.title')}</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>{t('wishlist.subtitle')}</Text>
+        <Text style={[styles.title, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('wishlist.title')}</Text>
+        <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t('wishlist.subtitle')}</Text>
       </View>
 
       <ScrollView style={styles.content}>
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('wishlist.savedForWishlist')}</Text>
-            <Text style={[styles.statValue, { color: theme.colors.success }]}>
+            <Text style={[styles.statLabel, fontRegular, { color: theme.colors.textSecondary, textAlign: 'center' }]}>{t('wishlist.savedForWishlist')}</Text>
+            <Text style={[styles.statValue, fontBold, { color: theme.colors.success }]}>
               {formatAmount(totalSavedForWishlist)}
             </Text>
           </View>
 
           <View style={[styles.statCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('wishlist.savedBySkipping')}</Text>
-            <Text style={[styles.statValue, { color: theme.colors.warning }]}>
+            <Text style={[styles.statLabel, fontRegular, { color: theme.colors.textSecondary, textAlign: 'center' }]}>{t('wishlist.savedBySkipping')}</Text>
+            <Text style={[styles.statValue, fontBold, { color: theme.colors.warning }]}>
               {formatAmount(totalSavedFromSkipping)}
             </Text>
           </View>
@@ -139,8 +143,8 @@ export default function WishlistScreen() {
         {wishlistItems.length === 0 ? (
           <View style={styles.emptyState}>
             <Heart size={64} color={theme.colors.border} strokeWidth={2} />
-            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>{t('wishlist.noItems')}</Text>
-            <Text style={[styles.emptyText, { color: theme.colors.textTertiary }]}>
+            <Text style={[styles.emptyTitle, fontBold, { color: theme.colors.text }]}>{t('wishlist.noItems')}</Text>
+            <Text style={[styles.emptyText, fontRegular, { color: theme.colors.textTertiary }]}>
               {t('wishlist.noItemsDescription')}
             </Text>
           </View>
@@ -157,8 +161,8 @@ export default function WishlistScreen() {
 
               return (
                 <View key={item._id} style={[styles.itemCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
-                  <View style={styles.itemHeader}>
-                    <Text style={[styles.itemName, { color: theme.colors.text }]}>{item.name}</Text>
+                  <View style={[styles.itemHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                    <Text style={[styles.itemName, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{item.name}</Text>
                     <TouchableOpacity
                       onPress={() => handleDeleteItem(item._id, item.name)}
                     >
@@ -166,9 +170,9 @@ export default function WishlistScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={styles.itemPrice}>
+                  <View style={[styles.itemPrice, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                     <Coins size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                    <Text style={[styles.itemPriceText, { color: theme.colors.textSecondary }]}>
+                    <Text style={[styles.itemPriceText, fontRegular, { color: theme.colors.textSecondary, marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
                       {formatAmount(item.price)}
                     </Text>
                   </View>
@@ -185,22 +189,22 @@ export default function WishlistScreen() {
                         ]}
                       />
                     </View>
-                    <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
+                    <Text style={[styles.progressText, fontRegular, { color: theme.colors.textSecondary }]}>
                       {formatAmount(item.savedAmount)} / {formatAmount(item.price)}
                     </Text>
                   </View>
 
                   {!isComplete && (
-                    <View style={styles.itemFooter}>
-                      <View style={styles.timeInfo}>
+                    <View style={[styles.itemFooter, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+                      <View style={[styles.timeInfo, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
                         <Calendar size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                        <Text style={[styles.timeText, { color: theme.colors.textSecondary }]}>
+                        <Text style={[styles.timeText, fontRegular, { color: theme.colors.textSecondary, marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
                           {remainingTime}
                         </Text>
                       </View>
 
                       <TouchableOpacity
-                        style={[styles.addSavingsButton, { backgroundColor: theme.colors.primary }]}
+                        style={[styles.addSavingsButton, { backgroundColor: theme.colors.primary, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
                         onPress={() =>
                           handleAddSavings(
                             item._id,
@@ -210,7 +214,7 @@ export default function WishlistScreen() {
                         }
                       >
                         <Plus size={16} color={theme.colors.background} strokeWidth={2} />
-                        <Text style={[styles.addSavingsText, { color: theme.colors.background }]}>
+                        <Text style={[styles.addSavingsText, fontBold, { color: theme.colors.background, marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
                           {t('wishlist.addSavings', { amount: formatAmount(item.monthlySavings) })}
                         </Text>
                       </TouchableOpacity>
@@ -219,7 +223,7 @@ export default function WishlistScreen() {
 
                   {isComplete && (
                     <View style={[styles.completeBadge, { backgroundColor: theme.colors.success }]}>
-                      <Text style={[styles.completeText, { color: theme.colors.background }]}>{t('wishlist.goalReached')}</Text>
+                      <Text style={[styles.completeText, fontBold, { color: theme.colors.background }]}>{t('wishlist.goalReached')}</Text>
                     </View>
                   )}
                 </View>

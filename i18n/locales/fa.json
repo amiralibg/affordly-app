@@ -6,7 +6,8 @@
     "edit": "ویرایش",
     "loading": "در حال بارگذاری...",
     "error": "خطا",
-    "success": "موفق"
+    "success": "موفق",
+    "ok": "تأیید"
   },
   "auth": {
     "signIn": "ورود",
@@ -75,7 +76,8 @@
     "language": "زبان",
     "languageDescription": "زبان دلخواه خود را انتخاب کنید",
     "currency": "واحد پول",
-    "currencyDescription": "واحد پول دلخواه خود را انتخاب کنید"
+    "currencyDescription": "واحد پول دلخواه خود را انتخاب کنید",
+    "restartRequired": "لطفاً برنامه را ببندید و دوباره باز کنید تا تغییرات زبان و چیدمان اعمال شود."
   },
   "time": {
     "year": "سال",
@@ -90,5 +92,10 @@
     "minutes": "دقیقه",
     "second": "ثانیه",
     "seconds": "ثانیه"
+  },
+  "navigation": {
+    "calculate": "محاسبه",
+    "wishlist": "لیست علاقه‌مندی‌ها",
+    "profile": "پروفایل"
   }
 }

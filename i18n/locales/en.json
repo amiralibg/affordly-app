@@ -6,7 +6,8 @@
     "edit": "Edit",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "ok": "OK"
   },
   "auth": {
     "signIn": "Sign In",
@@ -75,7 +76,8 @@
     "language": "Language",
     "languageDescription": "Choose your preferred language",
     "currency": "Currency",
-    "currencyDescription": "Choose your preferred currency"
+    "currencyDescription": "Choose your preferred currency",
+    "restartRequired": "Please close and reopen the app to apply language and layout changes."
   },
   "time": {
     "year": "year",
@@ -90,5 +92,10 @@
     "minutes": "minutes",
     "second": "second",
     "seconds": "seconds"
+  },
+  "navigation": {
+    "calculate": "Calculate",
+    "wishlist": "Wishlist",
+    "profile": "Profile"
   }
 }

@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Calculator, Heart, User } from 'lucide-react-native';
 import Animated, {
@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from '@/contexts/ThemeContext';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -18,6 +19,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme();
+  const { t, i18n } = useTranslation();
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -57,6 +59,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
       marginLeft: 8,
       fontWeight: '600',
       fontSize: 13,
+      fontFamily: i18n.language === 'fa' ? theme.typography.families.persian : theme.typography.families.default,
     },
   });
 
@@ -73,6 +76,19 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
     }
   };
 
+  const getTranslatedLabel = (routeName: string) => {
+    switch (routeName) {
+      case 'index':
+        return t('navigation.calculate');
+      case 'wishlist':
+        return t('navigation.wishlist');
+      case 'profile':
+        return t('navigation.profile');
+      default:
+        return routeName;
+    }
+  };
+
   return (
     <View style={[dynamicStyles.container, dynamicStyles.glowOuter]}>
       <BlurView
@@ -83,14 +99,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
         {state.routes.map((route, index) => {
           if (['_sitemap', '+not-found'].includes(route.name)) return null;
 
-          const { options } = descriptors[route.key];
-          const label =
-            options.tabBarLabel !== undefined
-              ? options.tabBarLabel
-              : options.title !== undefined
-              ? options.title
-              : route.name;
-
+          const label = getTranslatedLabel(route.name);
           const isFocused = state.index === index;
 
           const onPress = () => {

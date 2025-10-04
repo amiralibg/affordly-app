@@ -8,12 +8,14 @@ import {
   ScrollView,
   Alert,
   Modal,
+  I18nManager,
 } from 'react-native';
 import { DollarSign, Calendar, TrendingUp, Heart, X, Coins } from 'lucide-react-native';
 import { useCreateProduct } from '@/lib/hooks/useProducts';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 interface AddProductModalProps {
   visible: boolean;
@@ -33,8 +35,10 @@ interface TimeBreakdown {
 export default function AddProductModal({ visible, onClose, monthlySalary }: AddProductModalProps) {
   const createProduct = useCreateProduct();
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { formatAmount } = useCurrency();
+  const fontRegular = useLocalizedFont('regular');
+  const fontBold = useLocalizedFont('bold');
 
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
@@ -210,8 +214,8 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
       onRequestClose={handleClose}
     >
       <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-        <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
-          <Text style={[styles.modalTitle, { color: theme.colors.text }]}>{t('calculate.newProduct')}</Text>
+        <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border, flexDirection: i18n.language === 'fa' ? 'row-reverse' : 'row' }]}>
+          <Text style={[styles.modalTitle, { color: theme.colors.text }, fontBold]}>{t('calculate.newProduct')}</Text>
           <TouchableOpacity onPress={handleClose}>
             <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
@@ -219,9 +223,9 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
 
         <ScrollView style={styles.modalContent}>
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>{t('calculate.productName')}</Text>
+            <Text style={[styles.label, { color: theme.colors.text, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontBold]}>{t('calculate.productName')}</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
+              style={[styles.input, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontRegular]}
               placeholder={t('calculate.productNamePlaceholder')}
               value={productName}
               onChangeText={setProductName}
@@ -230,11 +234,11 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>{t('calculate.price')}</Text>
-            <View style={[styles.inputWithIcon, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
+            <Text style={[styles.label, { color: theme.colors.text, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontBold]}>{t('calculate.price')}</Text>
+            <View style={[styles.inputWithIcon, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder, flexDirection: i18n.language === 'fa' ? 'row-reverse' : 'row' }]}>
               <Coins size={20} color={theme.colors.textSecondary} strokeWidth={2} />
               <TextInput
-                style={[styles.inputWithIconText, { color: theme.colors.text }]}
+                style={[styles.inputWithIconText, { color: theme.colors.text, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontRegular]}
                 placeholder="0"
                 value={productPrice}
                 onChangeText={handlePriceChange}
@@ -245,16 +249,16 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>
-              {t('calculate.monthlySavings')} <Text style={[styles.labelOptional, { color: theme.colors.textTertiary }]}>{t('calculate.monthlySavingsOptional')}</Text>
+            <Text style={[styles.label, { color: theme.colors.text, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontBold]}>
+              {t('calculate.monthlySavings')} <Text style={[styles.labelOptional, { color: theme.colors.textTertiary }, fontRegular]}>{t('calculate.monthlySavingsOptional')}</Text>
             </Text>
-            <Text style={[styles.labelDescription, { color: theme.colors.textSecondary }]}>
+            <Text style={[styles.labelDescription, { color: theme.colors.textSecondary, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontRegular]}>
               {t('calculate.monthlySavingsDescription')}
             </Text>
-            <View style={[styles.inputWithIcon, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
+            <View style={[styles.inputWithIcon, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder, flexDirection: i18n.language === 'fa' ? 'row-reverse' : 'row' }]}>
               <TrendingUp size={20} color={theme.colors.textSecondary} strokeWidth={2} />
               <TextInput
-                style={[styles.inputWithIconText, { color: theme.colors.text }]}
+                style={[styles.inputWithIconText, { color: theme.colors.text, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontRegular]}
                 placeholder={monthlySalary ? `${t('calculate.defaultAmount', { amount: formatAmount(monthlySalary) })}` : "0"}
                 value={monthlySavings}
                 onChangeText={handleMonthlySavingsChange}
@@ -265,7 +269,7 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
           </View>
 
           {monthlySalary && parseFloat(monthlySavings) > monthlySalary && (
-            <Text style={[styles.warningText, { color: theme.colors.warning }]}>
+            <Text style={[styles.warningText, { color: theme.colors.warning, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontRegular]}>
               {t('calculate.savingsExceedsSalary')}
             </Text>
           )}
@@ -273,8 +277,8 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
           {timeBreakdown !== null && (
             <View style={[styles.resultCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.primary }]}>
               <Calendar size={32} color={theme.colors.primary} strokeWidth={2} />
-              <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>{t('calculate.timeToSave')}</Text>
-              <Text style={[styles.resultValue, { color: theme.colors.primaryLight }]}>
+              <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }, fontRegular]}>{t('calculate.timeToSave')}</Text>
+              <Text style={[styles.resultValue, { color: theme.colors.primaryLight }, fontBold]}>
                 {formatTimeBreakdown(timeBreakdown)}
               </Text>
             </View>
@@ -282,12 +286,12 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
 
           <View style={styles.buttonGroup}>
             <TouchableOpacity
-              style={[styles.wishlistButton, { backgroundColor: theme.colors.primary }, !timeBreakdown && styles.buttonDisabled]}
+              style={[styles.wishlistButton, { backgroundColor: theme.colors.primary, flexDirection: i18n.language === 'fa' ? 'row-reverse' : 'row' }, !timeBreakdown && styles.buttonDisabled]}
               onPress={() => handleAddProduct(true)}
               disabled={!timeBreakdown}
             >
               <Heart size={20} color={theme.colors.background} strokeWidth={2} />
-              <Text style={[styles.wishlistButtonText, { color: theme.colors.background }]}>{t('calculate.addToWishlist')}</Text>
+              <Text style={[styles.wishlistButtonText, { color: theme.colors.background, marginLeft: i18n.language === 'fa' ? 0 : 8, marginRight: i18n.language === 'fa' ? 8 : 0 }, fontBold]}>{t('calculate.addToWishlist')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -295,11 +299,11 @@ export default function AddProductModal({ visible, onClose, monthlySalary }: Add
               onPress={() => handleAddProduct(false)}
               disabled={!timeBreakdown}
             >
-              <Text style={[styles.skipButtonText, { color: theme.colors.textSecondary }]}>{t('calculate.skipAndSave')}</Text>
+              <Text style={[styles.skipButtonText, { color: theme.colors.textSecondary }, fontBold]}>{t('calculate.skipAndSave')}</Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.helpText, { color: theme.colors.textTertiary }]}>
+          <Text style={[styles.helpText, { color: theme.colors.textTertiary, textAlign: i18n.language === 'fa' ? 'right' : 'left' }, fontRegular]}>
             {t('calculate.addToWishlistHelp')}
           </Text>
         </ScrollView>
