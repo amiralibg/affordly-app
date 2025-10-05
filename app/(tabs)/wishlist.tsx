@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -6,19 +7,12 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { useProducts, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/useProducts';
-import {
-  Heart,
-  Calendar,
-  DollarSign,
-  Trash2,
-  Plus,
-  Coins,
-} from 'lucide-react-native';
+import { Heart, Trash2, Plus, Coins, X } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import { useCurrency } from '@/contexts/CurrencyContext';
 import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function WishlistScreen() {
@@ -26,47 +20,61 @@ export default function WishlistScreen() {
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
   const { theme } = useTheme();
-  const { t, i18n } = useTranslation();
-  const { formatAmount } = useCurrency();
   const fontRegular = useLocalizedFont('regular');
   const fontBold = useLocalizedFont('bold');
-  const isRTL = i18n.language === 'fa';
+
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [goldAmount, setGoldAmount] = useState('');
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('fa-IR').format(Math.round(num));
+  };
 
   const wishlistItems = products.filter(p => p.isWishlisted);
-  const totalSavedForWishlist = wishlistItems.reduce((sum, item) => sum + item.savedAmount, 0);
-  const totalSavedFromSkipping = products
-    .filter(p => !p.isWishlisted)
-    .reduce((sum, item) => sum + item.savedAmount, 0);
 
-  const handleAddSavings = async (productId: string, currentAmount: number, monthlyAmount: number) => {
-    const newAmount = currentAmount + monthlyAmount;
+  const calculateProgress = (saved: number, total: number) => {
+    return Math.min((saved / total) * 100, 100);
+  };
+
+  const handleAddGold = async (productId: string, currentAmount: number) => {
+    const addAmount = parseFloat(goldAmount);
+
+    if (isNaN(addAmount) || addAmount <= 0) {
+      Alert.alert('خطا', 'لطفاً مقدار معتبری وارد کنید');
+      return;
+    }
+
+    const newAmount = currentAmount + addAmount;
+
     try {
       await updateProduct.mutateAsync({
         id: productId,
-        data: { savedAmount: newAmount },
+        data: { savedGoldAmount: newAmount },
       });
-      Alert.alert(t('common.success'), t('wishlist.savingsUpdated'));
+      Alert.alert('موفق', 'طلای ذخیره شده به‌روزرسانی شد');
+      setEditingProductId(null);
+      setGoldAmount('');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to update savings';
-      Alert.alert(t('common.error'), errorMessage);
+      const errorMessage = error.response?.data?.error || 'خطا در به‌روزرسانی';
+      Alert.alert('خطا', errorMessage);
     }
   };
 
   const handleDeleteItem = (productId: string, productName: string) => {
     Alert.alert(
-      t('wishlist.removeItem'),
-      t('wishlist.removeConfirm', { name: productName }),
+      'حذف محصول',
+      `آیا می‌خواهید "${productName}" را حذف کنید؟`,
       [
-        { text: t('common.cancel'), style: 'cancel' },
+        { text: 'لغو', style: 'cancel' },
         {
-          text: t('common.delete'),
+          text: 'حذف',
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteProduct.mutateAsync(productId);
             } catch (error: any) {
-              const errorMessage = error.response?.data?.error || 'Failed to delete product';
-              Alert.alert(t('common.error'), errorMessage);
+              const errorMessage = error.response?.data?.error || 'خطا در حذف محصول';
+              Alert.alert('خطا', errorMessage);
             }
           },
         },
@@ -82,156 +90,140 @@ export default function WishlistScreen() {
     );
   }
 
-  const calculateProgress = (saved: number, price: number) => {
-    return Math.min((saved / price) * 100, 100);
-  };
-
-  const calculateRemainingTime = (price: number, saved: number, monthly: number) => {
-    const remaining = price - saved;
-    if (remaining <= 0) return t('wishlist.goalReached');
-    if (monthly <= 0) return 'N/A';
-
-    // Calculate based on daily income (monthly / 30 days)
-    const dailyIncome = monthly / 30;
-    const totalDays = remaining / dailyIncome;
-
-    // Convert to readable format
-    const months = Math.floor(totalDays / 30);
-    const days = Math.floor(totalDays % 30);
-    const hours = Math.floor((totalDays % 1) * 24);
-
-    const parts: string[] = [];
-
-    if (months > 0) {
-      parts.push(`${months} ${months === 1 ? t('time.month') : t('time.months')}`);
-    }
-    if (days > 0 && months === 0) {
-      parts.push(`${days} ${days === 1 ? t('time.day') : t('time.days')}`);
-    }
-    if (hours > 0 && months === 0 && days === 0) {
-      parts.push(`${hours} ${hours === 1 ? t('time.hour') : t('time.hours')}`);
-    }
-
-    const timeLeft = parts.length > 0 ? parts.join(' ') : t('wishlist.lessThanHour');
-    return `${timeLeft} ${t('wishlist.timeLeft')}`;
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.title, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('wishlist.title')}</Text>
-        <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t('wishlist.subtitle')}</Text>
+      <View style={[styles.header, { borderBottomColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>علاقه‌مندی‌ها</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+          پیگیری پیشرفت خرید محصولات با طلا
+        </Text>
       </View>
 
-      <ScrollView style={styles.content}>
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
-            <Text style={[styles.statLabel, fontRegular, { color: theme.colors.textSecondary, textAlign: 'center' }]}>{t('wishlist.savedForWishlist')}</Text>
-            <Text style={[styles.statValue, fontBold, { color: theme.colors.success }]}>
-              {formatAmount(totalSavedForWishlist)}
-            </Text>
-          </View>
-
-          <View style={[styles.statCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
-            <Text style={[styles.statLabel, fontRegular, { color: theme.colors.textSecondary, textAlign: 'center' }]}>{t('wishlist.savedBySkipping')}</Text>
-            <Text style={[styles.statValue, fontBold, { color: theme.colors.warning }]}>
-              {formatAmount(totalSavedFromSkipping)}
-            </Text>
-          </View>
-        </View>
-
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {wishlistItems.length === 0 ? (
           <View style={styles.emptyState}>
-            <Heart size={64} color={theme.colors.border} strokeWidth={2} />
-            <Text style={[styles.emptyTitle, fontBold, { color: theme.colors.text }]}>{t('wishlist.noItems')}</Text>
-            <Text style={[styles.emptyText, fontRegular, { color: theme.colors.textTertiary }]}>
-              {t('wishlist.noItemsDescription')}
+            <Heart size={48} color={theme.colors.textSecondary} strokeWidth={2} />
+            <Text style={[styles.emptyText, fontRegular, { color: theme.colors.textSecondary }]}>
+              هنوز محصولی به علاقه‌مندی اضافه نکرده‌اید
             </Text>
           </View>
         ) : (
-          <View style={styles.listContainer}>
-            {wishlistItems.map((item) => {
-              const progress = calculateProgress(item.savedAmount, item.price);
-              const remainingTime = calculateRemainingTime(
-                item.price,
-                item.savedAmount,
-                item.monthlySavings
-              );
-              const isComplete = item.savedAmount >= item.price;
+          wishlistItems.map((item) => {
+            const progress = calculateProgress(item.savedGoldAmount, item.goldEquivalent);
+            const remaining = Math.max(0, item.goldEquivalent - item.savedGoldAmount);
 
-              return (
-                <View key={item._id} style={[styles.itemCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
-                  <View style={[styles.itemHeader, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                    <Text style={[styles.itemName, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{item.name}</Text>
-                    <TouchableOpacity
-                      onPress={() => handleDeleteItem(item._id, item.name)}
-                    >
-                      <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={[styles.itemPrice, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                    <Coins size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                    <Text style={[styles.itemPriceText, fontRegular, { color: theme.colors.textSecondary, marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
-                      {formatAmount(item.price)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.progressContainer}>
-                    <View style={[styles.progressBar, { backgroundColor: theme.colors.backgroundSecondary }]}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          {
-                            width: `${progress}%`,
-                            backgroundColor: isComplete ? theme.colors.success : theme.colors.primary,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <Text style={[styles.progressText, fontRegular, { color: theme.colors.textSecondary }]}>
-                      {formatAmount(item.savedAmount)} / {formatAmount(item.price)}
-                    </Text>
-                  </View>
-
-                  {!isComplete && (
-                    <View style={[styles.itemFooter, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                      <View style={[styles.timeInfo, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
-                        <Calendar size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                        <Text style={[styles.timeText, fontRegular, { color: theme.colors.textSecondary, marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
-                          {remainingTime}
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity
-                        style={[styles.addSavingsButton, { backgroundColor: theme.colors.primary, flexDirection: isRTL ? 'row-reverse' : 'row' }]}
-                        onPress={() =>
-                          handleAddSavings(
-                            item._id,
-                            item.savedAmount,
-                            item.monthlySavings
-                          )
-                        }
-                      >
-                        <Plus size={16} color={theme.colors.background} strokeWidth={2} />
-                        <Text style={[styles.addSavingsText, fontBold, { color: theme.colors.background, marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
-                          {t('wishlist.addSavings', { amount: formatAmount(item.monthlySavings) })}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {isComplete && (
-                    <View style={[styles.completeBadge, { backgroundColor: theme.colors.success }]}>
-                      <Text style={[styles.completeText, fontBold, { color: theme.colors.background }]}>{t('wishlist.goalReached')}</Text>
-                    </View>
-                  )}
+            return (
+              <View key={item._id} style={[styles.card, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
+                <View style={styles.cardHeader}>
+                  <Text style={[styles.productName, fontBold, { color: theme.colors.text }]}>{item.name}</Text>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteItem(item._id, item.name)}
+                  >
+                    <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
+                  </TouchableOpacity>
                 </View>
-              );
-            })}
-          </View>
+
+                <View style={styles.priceRow}>
+                  <Text style={[styles.price, fontRegular, { color: theme.colors.textSecondary }]}>{formatNumber(item.price)} تومان</Text>
+                </View>
+
+                <View style={styles.goldInfo}>
+                  <View style={styles.goldRow}>
+                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>معادل طلا:</Text>
+                    <Text style={[styles.goldValue, fontBold, { color: theme.colors.primary }]}>
+                      {(item.goldEquivalent * 1000).toFixed(0)} میلی‌گرم
+                    </Text>
+                  </View>
+                  <View style={styles.goldRow}>
+                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>ذخیره شده:</Text>
+                    <Text style={[styles.goldValueSaved, fontBold, { color: theme.colors.success }]}>
+                      {(item.savedGoldAmount * 1000).toFixed(0)} میلی‌گرم
+                    </Text>
+                  </View>
+                  <View style={styles.goldRow}>
+                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>باقی‌مانده:</Text>
+                    <Text style={[styles.goldValueRemaining, fontBold, { color: theme.colors.textTertiary }]}>
+                      {(remaining * 1000).toFixed(0)} میلی‌گرم
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.progressBarContainer}>
+                  <View style={[styles.progressBar, { backgroundColor: theme.colors.border }]}>
+                    <View
+                      style={[styles.progressFill, { width: `${progress}%`, backgroundColor: theme.colors.primary }]}
+                    />
+                  </View>
+                  <Text style={[styles.progressText, fontBold, { color: theme.colors.primary }]}>{progress.toFixed(1)}%</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={() => {
+                    setEditingProductId(item._id);
+                    setGoldAmount('');
+                  }}
+                >
+                  <Plus size={20} color={theme.colors.background} strokeWidth={2} />
+                  <Text style={[styles.addButtonText, fontBold, { color: theme.colors.background }]}>افزودن طلا</Text>
+                </TouchableOpacity>
+
+                {progress >= 100 && (
+                  <View style={[styles.completedBadge, { backgroundColor: theme.colors.success + '26' }]}>
+                    <Text style={[styles.completedText, fontBold, { color: theme.colors.success }]}>✓ هدف به دست آمد!</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })
         )}
       </ScrollView>
+
+      <Modal
+        visible={editingProductId !== null}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setEditingProductId(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.card }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
+              <Text style={[styles.modalTitle, fontBold, { color: theme.colors.text }]}>افزودن طلا</Text>
+              <TouchableOpacity onPress={() => setEditingProductId(null)}>
+                <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContent}>
+              <Text style={[styles.modalLabel, fontRegular, { color: theme.colors.text }]}>مقدار طلا (گرم)</Text>
+              <View style={[styles.inputWithIcon, { backgroundColor: theme.colors.background, borderColor: theme.colors.cardBorder }]}>
+                <Coins size={20} color={theme.colors.textSecondary} strokeWidth={2} />
+                <TextInput
+                  style={[styles.inputText, fontRegular, { color: theme.colors.text }]}
+                  placeholder="0"
+                  value={goldAmount}
+                  onChangeText={setGoldAmount}
+                  keyboardType="decimal-pad"
+                  placeholderTextColor={theme.colors.textTertiary}
+                  autoFocus
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+                onPress={() => {
+                  const product = products.find(p => p._id === editingProductId);
+                  if (product) {
+                    handleAddGold(editingProductId!, product.savedGoldAmount);
+                  }
+                }}
+              >
+                <Text style={[styles.saveButtonText, fontBold, { color: theme.colors.background }]}>ذخیره</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -251,58 +243,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '700',
     marginBottom: 4,
+    textAlign: 'right',
   },
   subtitle: {
     fontSize: 16,
+    textAlign: 'right',
   },
   content: {
     flex: 1,
-  },
-  statsContainer: {
-    flexDirection: 'row',
     padding: 24,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 12,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: 4,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
-    marginTop: 60,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 16,
   },
   emptyText: {
     fontSize: 16,
+    marginTop: 16,
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 24,
   },
-  listContainer: {
-    padding: 24,
-    paddingTop: 0,
-  },
-  itemCard: {
+  card: {
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -310,37 +272,60 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 4,
     elevation: 2,
   },
-  itemHeader: {
-    flexDirection: 'row',
+  cardHeader: {
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  itemName: {
-    fontSize: 18,
-    fontWeight: '600',
+  productName: {
+    fontSize: 20,
     flex: 1,
+    textAlign: 'right',
   },
-  itemPrice: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  priceRow: {
     marginBottom: 16,
   },
-  itemPriceText: {
-    fontSize: 16,
-    marginLeft: 4,
+  price: {
+    fontSize: 18,
+    textAlign: 'right',
   },
-  progressContainer: {
+  goldInfo: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  goldRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  goldLabel: {
+    fontSize: 14,
+  },
+  goldValue: {
+    fontSize: 14,
+  },
+  goldValueSaved: {
+    fontSize: 14,
+  },
+  goldValueRemaining: {
+    fontSize: 14,
+  },
+  progressBarContainer: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 16,
   },
   progressBar: {
+    flex: 1,
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
-    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
@@ -348,40 +333,75 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    textAlign: 'center',
   },
-  itemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  addButton: {
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row-reverse',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  timeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  addButtonText: {
+    fontSize: 16,
+    marginRight: 8,
   },
-  timeText: {
-    fontSize: 14,
-    marginLeft: 6,
-  },
-  addSavingsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addSavingsText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  completeBadge: {
+  completedBadge: {
+    marginTop: 12,
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
   },
-  completeText: {
+  completedText: {
+    fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 24,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+  },
+  modalContent: {
+    padding: 24,
+  },
+  modalLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'right',
+  },
+  inputWithIcon: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  inputText: {
+    flex: 1,
+    fontSize: 18,
+    marginRight: 12,
+    textAlign: 'right',
+  },
+  saveButton: {
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    fontSize: 18,
   },
 });

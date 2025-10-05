@@ -5,62 +5,63 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  I18nManager,
+  ActivityIndicator,
 } from 'react-native';
-import { useProfile } from '@/lib/hooks/useProfile';
-import { Plus, DollarSign, Coins } from 'lucide-react-native';
+import { use18KGoldPrice } from '@/lib/hooks/useGold';
+import { Plus, Coins } from 'lucide-react-native';
 import AddProductModal from '@/components/AddProductModal';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function CalculateScreen() {
-  const { data: profile } = useProfile();
-  const { theme } = useTheme();
-  const { t, i18n } = useTranslation();
-  const { formatAmount } = useCurrency();
+  const { data: goldPrice, isLoading } = use18KGoldPrice();
   const [modalVisible, setModalVisible] = useState(false);
-  const fontRegular = useLocalizedFont('regular');
-  const fontBold = useLocalizedFont('bold');
-  const isRTL = i18n.language === 'fa';
+  const { theme } = useTheme();
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('fa-IR').format(Math.round(num));
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.title, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('calculate.title')}</Text>
-        <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t('calculate.subtitle')}</Text>
+      <View style={[styles.header, { borderBottomColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>محاسبه طلا</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>قیمت محصول را وارد کنید و معادل طلای آن را ببینید</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {!profile || profile.monthlySalary === 0 ? (
-          <View style={styles.noSalaryContainer}>
-            <Coins size={48} color={theme.colors.textTertiary} strokeWidth={2} />
-            <Text style={[styles.noSalaryText, fontRegular, { color: theme.colors.textTertiary }]}>
-              {t('calculate.noSalary')}
-            </Text>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>در حال دریافت قیمت طلا...</Text>
+          </View>
+        ) : goldPrice ? (
+          <View style={[styles.goldCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.primary }]}>
+            <Coins size={32} color={theme.colors.primary} strokeWidth={2} />
+            <Text style={[styles.goldLabel, { color: theme.colors.textTertiary }]}>قیمت طلای 18 عیار</Text>
+            <Text style={[styles.goldPrice, { color: theme.colors.primary }]}>{formatNumber(goldPrice.price)} تومان</Text>
+            <Text style={[styles.goldUnit, { color: theme.colors.textTertiary }]}>هر گرم</Text>
           </View>
         ) : (
-          <View style={[styles.salaryCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
-            <Text style={[styles.salaryLabel, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{t('calculate.yourMonthlySalary')}</Text>
-            <Text style={[styles.salaryAmount, fontBold, { color: theme.colors.primaryLight, textAlign: isRTL ? 'right' : 'left' }]}>{formatAmount(profile.monthlySalary)}</Text>
+          <View style={styles.errorContainer}>
+            <Coins size={48} color={theme.colors.textSecondary} strokeWidth={2} />
+            <Text style={[styles.errorText, { color: theme.colors.textSecondary }]}>خطا در دریافت قیمت طلا</Text>
           </View>
         )}
 
         <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: theme.colors.primary, flexDirection: isRTL ? 'row-reverse' : 'row' }, (!profile || profile.monthlySalary === 0) && styles.addButtonDisabled]}
+          style={[styles.addButton, { backgroundColor: theme.colors.primary }, !goldPrice && styles.addButtonDisabled]}
           onPress={() => setModalVisible(true)}
-          disabled={!profile || profile.monthlySalary === 0}
+          disabled={!goldPrice}
         >
           <Plus size={24} color={theme.colors.background} strokeWidth={2} />
-          <Text style={[styles.addButtonText, fontBold, { color: theme.colors.background, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>{t('calculate.addNewProduct')}</Text>
+          <Text style={[styles.addButtonText, { color: theme.colors.background }]}>افزودن محصول جدید</Text>
         </TouchableOpacity>
       </ScrollView>
 
       <AddProductModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        monthlySalary={profile?.monthlySalary}
+        goldPrice={goldPrice?.price}
       />
     </View>
   );
@@ -79,43 +80,67 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 4,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_700Bold',
   },
   subtitle: {
     fontSize: 16,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_400Regular',
   },
   content: {
     flex: 1,
     padding: 24,
   },
-  noSalaryContainer: {
+  loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
   },
-  noSalaryText: {
+  loadingText: {
     fontSize: 16,
-    textAlign: 'center',
     marginTop: 16,
-    lineHeight: 24,
+    textAlign: 'center',
+    fontFamily: 'Vazirmatn_400Regular',
   },
-  salaryCard: {
+  goldCard: {
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
     borderWidth: 1,
+    alignItems: 'center',
   },
-  salaryLabel: {
-    fontSize: 14,
-    marginBottom: 8,
+  goldLabel: {
+    fontSize: 16,
+    marginTop: 12,
+    fontFamily: 'Vazirmatn_400Regular',
   },
-  salaryAmount: {
+  goldPrice: {
     fontSize: 36,
     fontWeight: '700',
+    marginTop: 8,
+    fontFamily: 'Vazirmatn_700Bold',
+  },
+  goldUnit: {
+    fontSize: 14,
+    marginTop: 4,
+    fontFamily: 'Vazirmatn_400Regular',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    marginTop: 16,
+    textAlign: 'center',
+    fontFamily: 'Vazirmatn_400Regular',
   },
   addButton: {
     borderRadius: 16,
     padding: 20,
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -125,6 +150,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 8,
+    marginRight: 8,
+    fontFamily: 'Vazirmatn_700Bold',
   },
 });

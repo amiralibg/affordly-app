@@ -5,9 +5,10 @@ export interface Product {
   userId: string;
   name: string;
   price: number;
-  monthlySavings: number;
+  goldEquivalent: number;
+  goldPriceAtCreation: number;
   isWishlisted: boolean;
-  savedAmount: number;
+  savedGoldAmount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -15,17 +16,15 @@ export interface Product {
 export interface CreateProductData {
   name: string;
   price: number;
-  monthlySavings: number;
   isWishlisted?: boolean;
-  savedAmount?: number;
+  savedGoldAmount?: number;
 }
 
 export interface UpdateProductData {
   name?: string;
   price?: number;
-  monthlySavings?: number;
   isWishlisted?: boolean;
-  savedAmount?: number;
+  savedGoldAmount?: number;
 }
 
 export const productsApi = {

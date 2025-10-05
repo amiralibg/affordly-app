@@ -15,6 +15,7 @@ import { useSignIn, useSignUp } from '@/lib/hooks/useAuth';
 import { Wallet } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function AuthScreen() {
   const [email, setEmail] = useState('');
@@ -26,6 +27,8 @@ export default function AuthScreen() {
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const fontRegular = useLocalizedFont('regular');
+  const fontBold = useLocalizedFont('bold');
 
   const signInMutation = useSignIn();
   const signUpMutation = useSignUp();
@@ -72,8 +75,8 @@ export default function AuthScreen() {
           <View style={[styles.iconContainer, { backgroundColor: theme.colors.backgroundSecondary }]}>
             <Wallet size={48} color={theme.colors.primary} strokeWidth={2} />
           </View>
-          <Text style={[styles.title, { color: theme.colors.text }]}>{t('auth.appName')}</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.title, fontBold, { color: theme.colors.text }]}>{t('auth.appName')}</Text>
+          <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary }]}>
             {t('auth.appTagline')}
           </Text>
         </View>
@@ -81,7 +84,7 @@ export default function AuthScreen() {
         <View style={styles.form}>
           {isSignUp && (
             <TextInput
-              style={[styles.input, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
+              style={[styles.input, fontRegular, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
               placeholder={t('auth.name')}
               value={name}
               onChangeText={setName}
@@ -91,7 +94,7 @@ export default function AuthScreen() {
           )}
 
           <TextInput
-            style={[styles.input, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
+            style={[styles.input, fontRegular, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
             placeholder={t('auth.email')}
             value={email}
             onChangeText={setEmail}
@@ -101,7 +104,7 @@ export default function AuthScreen() {
           />
 
           <TextInput
-            style={[styles.input, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
+            style={[styles.input, fontRegular, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
             placeholder={t('auth.password')}
             value={password}
             onChangeText={setPassword}
@@ -114,7 +117,7 @@ export default function AuthScreen() {
             onPress={handleAuth}
             disabled={loading}
           >
-            <Text style={[styles.buttonText, { color: theme.colors.background }]}>
+            <Text style={[styles.buttonText, fontBold, { color: theme.colors.background }]}>
               {loading ? t('common.loading') : isSignUp ? t('auth.signUp') : t('auth.signIn')}
             </Text>
           </TouchableOpacity>
@@ -123,7 +126,7 @@ export default function AuthScreen() {
             style={styles.switchButton}
             onPress={() => setIsSignUp(!isSignUp)}
           >
-            <Text style={[styles.switchButtonText, { color: theme.colors.primary }]}>
+            <Text style={[styles.switchButtonText, fontRegular, { color: theme.colors.primary }]}>
               {isSignUp
                 ? t('auth.alreadyHaveAccount')
                 : t('auth.noAccount')}
@@ -158,7 +161,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '700',
     marginBottom: 8,
   },
   subtitle: {
@@ -187,7 +189,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600',
   },
   switchButton: {
     marginTop: 24,

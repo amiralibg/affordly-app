@@ -20,9 +20,9 @@ export default function TabLayout() {
 
   return (
     <Tabs tabBar={(props) => <CustomNavBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tabs.Screen name="index" options={{ title: 'Calculate' }} />
-      <Tabs.Screen name="wishlist" options={{ title: 'Wishlist' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="index" options={{ title: 'محاسبه' }} />
+      <Tabs.Screen name="wishlist" options={{ title: 'علاقه‌مندی‌ها' }} />
+      <Tabs.Screen name="profile" options={{ title: 'تنظیمات' }} />
     </Tabs>
   );
 }

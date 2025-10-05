@@ -1,6 +1,6 @@
 import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Calculator, Heart, User } from 'lucide-react-native';
+import { Coins, Heart, Settings } from 'lucide-react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -8,7 +8,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from '@/contexts/ThemeContext';
 import { BlurView } from 'expo-blur';
-import { useTranslation } from 'react-i18next';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -19,14 +18,13 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme();
-  const { t, i18n } = useTranslation();
 
   const dynamicStyles = StyleSheet.create({
     container: {
       position: 'absolute',
       width: '70%',
       alignSelf: 'center',
-      bottom: 24,
+      bottom: 42,
       borderRadius: 28,
       overflow: 'hidden',
       borderWidth: 1,
@@ -51,39 +49,39 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
       alignItems: 'center',
       paddingHorizontal: 12,
       paddingVertical: 14,
-      backgroundColor: `${theme.colors.backgroundTertiary}BF`,
+      backgroundColor: theme.isDark ? theme.colors.card + 'E6' : '#FFFFFFBF',
       borderRadius: 24,
     },
     text: {
       color: theme.colors.primary,
-      marginLeft: 8,
+      marginRight: 8,
       fontWeight: '600',
       fontSize: 13,
-      fontFamily: i18n.language === 'fa' ? theme.typography.families.persian : theme.typography.families.default,
+      fontFamily: 'Vazirmatn_700Bold',
     },
   });
 
   const getIconByRouteName = (routeName: string, color: string) => {
     switch (routeName) {
       case 'index':
-        return <Calculator size={18} color={color} strokeWidth={2} />;
+        return <Coins size={18} color={color} strokeWidth={2} />;
       case 'wishlist':
         return <Heart size={18} color={color} strokeWidth={2} />;
       case 'profile':
-        return <User size={18} color={color} strokeWidth={2} />;
+        return <Settings size={18} color={color} strokeWidth={2} />;
       default:
-        return <Calculator size={18} color={color} strokeWidth={2} />;
+        return <Coins size={18} color={color} strokeWidth={2} />;
     }
   };
 
-  const getTranslatedLabel = (routeName: string) => {
+  const getLabel = (routeName: string) => {
     switch (routeName) {
       case 'index':
-        return t('navigation.calculate');
+        return 'محاسبه';
       case 'wishlist':
-        return t('navigation.wishlist');
+        return 'علاقه‌مندی‌ها';
       case 'profile':
-        return t('navigation.profile');
+        return 'تنظیمات';
       default:
         return routeName;
     }
@@ -99,7 +97,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
         {state.routes.map((route, index) => {
           if (['_sitemap', '+not-found'].includes(route.name)) return null;
 
-          const label = getTranslatedLabel(route.name);
+          const label = getLabel(route.name);
           const isFocused = state.index === index;
 
           const onPress = () => {
@@ -123,20 +121,14 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
                 styles.tabItem,
                 {
                   backgroundColor: isFocused
-                    ? theme.isDark
-                      ? 'rgba(167, 139, 250, 0.25)'
-                      : 'rgba(124, 58, 237, 0.15)'
+                    ? theme.colors.primary + '26'
                     : 'transparent',
                 },
               ]}
             >
               {getIconByRouteName(
                 route.name,
-                isFocused
-                  ? theme.colors.primary
-                  : theme.isDark
-                  ? theme.colors.textTertiary
-                  : theme.colors.textSecondary
+                isFocused ? theme.colors.primary : theme.colors.textSecondary
               )}
               {isFocused && (
                 <Animated.Text
@@ -164,6 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 24,
     marginHorizontal: 4,
+    gap: 6,
   },
 });
 

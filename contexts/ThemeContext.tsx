@@ -85,31 +85,31 @@ export interface Theme {
 
 const darkTheme: Theme = {
   colors: {
-    // Deep, rich backgrounds - strong contrast
-    background: '#0a0512',
-    backgroundSecondary: '#150d24',
-    backgroundTertiary: '#221838',
+    // Deep, elegant dark backgrounds with warm undertone
+    background: '#0C0A09', // near-black with subtle brown warmth
+    backgroundSecondary: '#1A1411', // slightly lighter, cozy layer
+    backgroundTertiary: '#2B201B', // warm neutral for surfaces
 
-    // Vibrant purples - less pastel, more saturated
-    primary: '#a78bfa',
-    primaryLight: '#c4b5fd',
+    // Refined gold primary accents
+    primary: '#E6B422', // elegant muted gold
+    primaryLight: '#F2CC85', // soft highlight gold
 
-    // High contrast text hierarchy
-    text: '#ffffff',
-    textSecondary: '#d4c5f9',
-    textTertiary: '#a78bfa',
+    // High-contrast text
+    text: '#F9FAFB', // near white
+    textSecondary: '#D1BFA4', // soft warm beige text
+    textTertiary: '#E6B422', // gold accent text
 
-    // Defined borders
-    border: '#2d1f47',
+    // Borders
+    border: '#3C2E25',
 
-    // Cards stand out from background
-    card: '#1a1129',
-    cardBorder: '#2d1f4750',
+    // Cards and overlays
+    card: '#14100E',
+    cardBorder: '#3C2E2555',
 
-    // Vibrant status colors
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
+    // Status colors (unchanged)
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
   },
   spacing: SPACING,
   typography: TYPOGRAPHY,
@@ -119,31 +119,29 @@ const darkTheme: Theme = {
 
 const lightTheme: Theme = {
   colors: {
-    // Clean, bright backgrounds
-    background: '#fafafa',
-    backgroundSecondary: '#f5f3ff',
-    backgroundTertiary: '#ede9fe',
+    // Soft neutral backgrounds with warmth
+    background: '#FAFAF9', // clean off-white
+    backgroundSecondary: '#F9F5EC', // soft cream
+    backgroundTertiary: '#F5EAD3', // subtle golden tone
 
-    // Rich, saturated purple
-    primary: '#7c3aed',
-    primaryLight: '#a78bfa',
+    // Gold primary colors
+    primary: '#E6B422', // same refined gold as dark mode
+    primaryLight: '#F2CC85',
 
-    // Strong text contrast
-    text: '#0a0512',
-    textSecondary: '#4c1d95',
-    textTertiary: '#7c3aed',
+    // Strong text hierarchy
+    text: '#1C1917', // deep neutral brownish-black
+    textSecondary: '#6B5E50', // soft warm gray-brown
+    textTertiary: '#A67C2E', // elegant muted gold text
 
-    // Clear borders
-    border: '#e9d5ff',
+    // Clear borders and surfaces
+    border: '#E4E4E7',
+    card: '#FFFFFF',
+    cardBorder: '#E4E4E7',
 
-    // Crisp white cards
-    card: '#ffffff',
-    cardBorder: '#e9d5ff60',
-
-    // Vibrant status colors
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
+    // Status colors
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
   },
   spacing: SPACING,
   typography: TYPOGRAPHY,

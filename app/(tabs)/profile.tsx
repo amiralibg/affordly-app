@@ -1,60 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   Alert,
-  ActivityIndicator,
   Switch,
 } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useProfile, useUpdateProfile } from '@/lib/hooks/useProfile';
-import { DollarSign, LogOut, Moon, Sun, Languages, Coins } from 'lucide-react-native';
+import { LogOut, Moon, Sun, Languages } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useCurrency, CURRENCIES } from '@/contexts/CurrencyContext';
 import { changeLanguage } from '@/i18n';
-import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const { theme, isDark, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
-  const { currency, setCurrency, formatAmount } = useCurrency();
-  const fontRegular = useLocalizedFont('regular');
-  const fontBold = useLocalizedFont('bold');
-
-  const { data: profile, isLoading } = useProfile();
-  const updateProfile = useUpdateProfile();
-
-  const [salary, setSalary] = useState('0');
-  const isRTL = i18n.language === 'fa';
-
-  useEffect(() => {
-    if (profile) {
-      setSalary(profile.monthlySalary.toString());
-    }
-  }, [profile]);
-
-  const handleSaveSalary = async () => {
-    const salaryNum = parseFloat(salary);
-    if (isNaN(salaryNum) || salaryNum < 0) {
-      Alert.alert(t('common.error'), t('profile.enterValidSalary'));
-      return;
-    }
-
-    try {
-      await updateProfile.mutateAsync({ monthlySalary: salaryNum });
-      Alert.alert(t('common.success'), t('profile.salaryUpdated'));
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to update salary';
-      Alert.alert(t('common.error'), errorMessage);
-    }
-  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -62,58 +26,38 @@ export default function ProfileScreen() {
 
   const handleLanguageChange = async (lang: string) => {
     const currentLang = i18n.language;
+    console.log("Current language:", currentLang);
     if (currentLang === lang) return;
+
+    console.log("Changing language to:", lang);
 
     await changeLanguage(lang);
 
-    // Show alert and suggest app restart for RTL changes
     Alert.alert(
-      t('common.success'),
-      'Language changed. The app will reload to apply changes.',
+      lang === 'fa' ? 'موفق' : 'Success',
+      lang === 'fa'
+        ? 'زبان تغییر کرد. برای اعمال کامل تغییرات، لطفاً اپلیکیشن را ببندید و دوباره باز کنید.'
+        : 'Language changed. Please close and reopen the app to apply RTL layout changes.',
       [
         {
-          text: t('common.ok'),
-          onPress: async () => {
-            // Try to restart using RNRestart if available
-            try {
-              const RNRestart = require('react-native-restart').default;
-              setTimeout(() => {
-                RNRestart.restart();
-              }, 100);
-            } catch (e) {
-              // Fallback: just reload JS bundle
-              Alert.alert('Please restart', 'Please close and reopen the app manually to apply RTL layout changes.');
-            }
-          }
+          text: lang === 'fa' ? 'باشه' : 'OK',
         }
       ]
     );
   };
 
-  const handleCurrencyChange = async (curr: 'USD' | 'IRR') => {
-    await setCurrency(curr);
-  };
-
-  if (isLoading) {
-    return (
-      <View style={[styles.container, styles.centerContent, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.title, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('profile.title')}</Text>
-        <Text style={[styles.email, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>{user?.email || 'user@example.com'}</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>تنظیمات</Text>
+        <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user?.email || 'user@example.com'}</Text>
       </View>
 
       {/* Language Selector */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('profile.language')}</Text>
-        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
-          {t('profile.languageDescription')}
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>زبان</Text>
+        <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
+          انتخاب زبان اپلیکیشن
         </Text>
 
         <View style={styles.optionsRow}>
@@ -130,7 +74,6 @@ export default function ProfileScreen() {
             <Languages size={20} color={i18n.language === 'en' ? theme.colors.background : theme.colors.textSecondary} strokeWidth={2} />
             <Text style={[
               styles.optionText,
-              fontBold,
               { color: i18n.language === 'en' ? theme.colors.background : theme.colors.text }
             ]}>
               English
@@ -150,7 +93,6 @@ export default function ProfileScreen() {
             <Languages size={20} color={i18n.language === 'fa' ? theme.colors.background : theme.colors.textSecondary} strokeWidth={2} />
             <Text style={[
               styles.optionText,
-              fontBold,
               { color: i18n.language === 'fa' ? theme.colors.background : theme.colors.text }
             ]}>
               فارسی
@@ -159,59 +101,11 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Currency Selector */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('profile.currency')}</Text>
-        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
-          {t('profile.currencyDescription')}
-        </Text>
-
-        <View style={styles.optionsRow}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              {
-                backgroundColor: currency === 'USD' ? theme.colors.primary : theme.colors.card,
-                borderColor: theme.colors.cardBorder
-              }
-            ]}
-            onPress={() => handleCurrencyChange('USD')}
-          >
-            <Coins size={20} color={currency === 'USD' ? theme.colors.background : theme.colors.textSecondary} strokeWidth={2} />
-            <Text style={[
-              styles.optionText,
-              { color: currency === 'USD' ? theme.colors.background : theme.colors.text }
-            ]}>
-              {isRTL ? CURRENCIES.USD.nameFa : CURRENCIES.USD.name}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              {
-                backgroundColor: currency === 'IRR' ? theme.colors.primary : theme.colors.card,
-                borderColor: theme.colors.cardBorder
-              }
-            ]}
-            onPress={() => handleCurrencyChange('IRR')}
-          >
-            <Coins size={20} color={currency === 'IRR' ? theme.colors.background : theme.colors.textSecondary} strokeWidth={2} />
-            <Text style={[
-              styles.optionText,
-              { color: currency === 'IRR' ? theme.colors.background : theme.colors.text }
-            ]}>
-              {isRTL ? CURRENCIES.IRR.nameFa : CURRENCIES.IRR.name}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Theme Selector */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('profile.theme')}</Text>
-        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
-          {t('profile.themeDescription')}
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>تم</Text>
+        <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
+          انتخاب حالت تاریک یا روشن
         </Text>
 
         <View style={[styles.themeContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
@@ -220,8 +114,8 @@ export default function ProfileScreen() {
           ) : (
             <Sun size={20} color={theme.colors.textSecondary} strokeWidth={2} />
           )}
-          <Text style={[styles.themeLabel, fontRegular, { color: theme.colors.text }]}>
-            {isDark ? t('profile.darkMode') : t('profile.lightMode')}
+          <Text style={[styles.themeLabel, { color: theme.colors.text }]}>
+            {isDark ? 'حالت تاریک' : 'حالت روشن'}
           </Text>
           <Switch
             value={isDark}
@@ -232,36 +126,12 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* Monthly Salary */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}>{t('profile.monthlySalary')}</Text>
-        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary, textAlign: isRTL ? 'right' : 'left' }]}>
-          {t('profile.monthlySalaryDescription')}
-        </Text>
-
-        <View style={[styles.inputContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
-          <DollarSign size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-          <TextInput
-            style={[styles.input, fontRegular, { color: theme.colors.text, textAlign: isRTL ? 'right' : 'left' }]}
-            placeholder="0"
-            value={salary}
-            onChangeText={setSalary}
-            keyboardType="numeric"
-            placeholderTextColor={theme.colors.textTertiary}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: theme.colors.primary }]}
-          onPress={handleSaveSalary}
-        >
-          <Text style={[styles.buttonText, fontBold, { color: theme.colors.background }]}>{t('profile.saveSalary')}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={[styles.signOutButton, { borderColor: theme.colors.error, flexDirection: isRTL ? 'row-reverse' : 'row' }]} onPress={handleSignOut}>
+      <TouchableOpacity
+        style={[styles.signOutButton, { borderColor: theme.colors.error }]}
+        onPress={handleSignOut}
+      >
         <LogOut size={20} color={theme.colors.error} strokeWidth={2} />
-        <Text style={[styles.signOutText, fontBold, { color: theme.colors.error, marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>{t('profile.signOut')}</Text>
+        <Text style={[styles.signOutText, { color: theme.colors.error }]}>خروج از حساب</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -270,10 +140,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   header: {
     padding: 24,
@@ -284,9 +150,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 4,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_700Bold',
   },
   email: {
     fontSize: 16,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_400Regular',
   },
   section: {
     padding: 24,
@@ -295,11 +165,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_700Bold',
   },
   sectionDescription: {
     fontSize: 14,
     marginBottom: 24,
     lineHeight: 20,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_400Regular',
   },
   optionsRow: {
     flexDirection: 'row',
@@ -319,9 +193,10 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 15,
     fontWeight: '600',
+    fontFamily: 'Vazirmatn_700Bold',
   },
   themeContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     borderRadius: 12,
     padding: 16,
@@ -332,42 +207,23 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
-    marginLeft: 12,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  button: {
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    marginRight: 12,
+    textAlign: 'right',
+    fontFamily: 'Vazirmatn_400Regular',
   },
   signOutButton: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
     margin: 24,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
+    gap: 8,
   },
   signOutText: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    fontFamily: 'Vazirmatn_700Bold',
   },
 });
