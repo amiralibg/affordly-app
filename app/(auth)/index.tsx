@@ -8,39 +8,75 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
+  I18nManager,
 } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSignIn, useSignUp } from '@/lib/hooks/useAuth';
-import { Wallet } from 'lucide-react-native';
+import { Wallet, Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedFont } from '@/hooks/useLocalizedFont';
+import { showToast } from '@/lib/toast';
 
 export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    email: false,
+    password: false,
+    name: false,
+  });
 
   const setUser = useAuthStore((state) => state.setUser);
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { theme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fontRegular = useLocalizedFont('regular');
   const fontBold = useLocalizedFont('bold');
+  const isRTL = i18n.language === 'fa';
 
   const signInMutation = useSignIn();
   const signUpMutation = useSignUp();
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleAuth = async () => {
-    if (!email || !password) {
-      Alert.alert(t('common.error'), t('auth.fillAllFields'));
-      return;
+    // Reset errors
+    const newErrors = {
+      email: false,
+      password: false,
+      name: false,
+    };
+
+    // Validate inputs
+    if (!email || !validateEmail(email)) {
+      newErrors.email = true;
+    }
+
+    if (!password) {
+      newErrors.password = true;
     }
 
     if (isSignUp && !name) {
-      Alert.alert(t('common.error'), t('auth.enterName'));
+      newErrors.name = true;
+    }
+
+    // Update error state
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    if (newErrors.email || newErrors.password || newErrors.name) {
+      if (!email || !password || (isSignUp && !name)) {
+        showToast.error(t('common.error'), t('auth.fillAllFields'));
+      } else if (newErrors.email) {
+        showToast.error(t('common.error'), t('auth.invalidEmail'));
+      }
       return;
     }
 
@@ -56,7 +92,7 @@ export default function AuthScreen() {
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'An error occurred';
-      Alert.alert(t('common.error'), errorMessage);
+      showToast.error(t('common.error'), errorMessage);
     }
   };
 
@@ -84,33 +120,87 @@ export default function AuthScreen() {
         <View style={styles.form}>
           {isSignUp && (
             <TextInput
-              style={[styles.input, fontRegular, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
+              style={[
+                styles.input,
+                fontRegular,
+                {
+                  backgroundColor: theme.colors.card,
+                  color: theme.colors.text,
+                  borderColor: errors.name ? '#EF4444' : theme.colors.cardBorder,
+                }
+              ]}
               placeholder={t('auth.name')}
               value={name}
-              onChangeText={setName}
+              onChangeText={(text) => {
+                setName(text);
+                if (errors.name && text) {
+                  setErrors({ ...errors, name: false });
+                }
+              }}
               autoCapitalize="words"
               placeholderTextColor={theme.colors.textTertiary}
             />
           )}
 
           <TextInput
-            style={[styles.input, fontRegular, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
+            style={[
+              styles.input,
+              fontRegular,
+              {
+                backgroundColor: theme.colors.card,
+                color: theme.colors.text,
+                borderColor: errors.email ? '#EF4444' : theme.colors.cardBorder,
+              }
+            ]}
             placeholder={t('auth.email')}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email && text) {
+                setErrors({ ...errors, email: false });
+              }
+            }}
             autoCapitalize="none"
             keyboardType="email-address"
             placeholderTextColor={theme.colors.textTertiary}
           />
 
-          <TextInput
-            style={[styles.input, fontRegular, { backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.cardBorder }]}
-            placeholder={t('auth.password')}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor={theme.colors.textTertiary}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={[
+                styles.passwordInput,
+                fontRegular,
+                {
+                  backgroundColor: theme.colors.card,
+                  color: theme.colors.text,
+                  borderColor: errors.password ? '#EF4444' : theme.colors.cardBorder,
+                  paddingLeft: isRTL ? 16 :  50,
+                  paddingRight: isRTL ? 50  : 16,
+                  textAlign: isRTL ? 'right' : 'left',
+                }
+              ]}
+              placeholder={t('auth.password')}
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password && text) {
+                  setErrors({ ...errors, password: false });
+                }
+              }}
+              secureTextEntry={!showPassword}
+              placeholderTextColor={theme.colors.textTertiary}
+            />
+            <TouchableOpacity
+              style={[styles.eyeIcon, isRTL ? styles.eyeIconRight : styles.eyeIconLeft]}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff size={20} color={theme.colors.textSecondary} strokeWidth={2} />
+              ) : (
+                <Eye size={20} color={theme.colors.textSecondary} strokeWidth={2} />
+              )}
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: theme.colors.primary }, loading && styles.buttonDisabled]}
@@ -177,6 +267,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 16,
     borderWidth: 1,
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  passwordInput: {
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    borderWidth: 1,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    top: 16,
+    padding: 4,
+  },
+  eyeIconRight: {
+    right: 16,
+  },
+  eyeIconLeft: {
+    left: 16,
   },
   button: {
     borderRadius: 12,

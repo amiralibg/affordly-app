@@ -8,6 +8,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useTheme } from '@/contexts/ThemeContext';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
+import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 const AnimatedTouchableOpacity =
   Animated.createAnimatedComponent(TouchableOpacity);
@@ -18,6 +20,8 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
   navigation,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
+  const fontBold = useLocalizedFont('bold');
 
   const dynamicStyles = StyleSheet.create({
     container: {
@@ -57,7 +61,6 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
       marginRight: 8,
       fontWeight: '600',
       fontSize: 13,
-      fontFamily: 'Vazirmatn_700Bold',
     },
   });
 
@@ -77,11 +80,11 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
   const getLabel = (routeName: string) => {
     switch (routeName) {
       case 'index':
-        return 'محاسبه';
+        return t('navigation.calculate');
       case 'wishlist':
-        return 'علاقه‌مندی‌ها';
+        return t('navigation.wishlist');
       case 'profile':
-        return 'تنظیمات';
+        return t('navigation.settings');
       default:
         return routeName;
     }
@@ -134,7 +137,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
                 <Animated.Text
                   entering={FadeIn.duration(200)}
                   exiting={FadeOut.duration(200)}
-                  style={dynamicStyles.text}
+                  style={[dynamicStyles.text, fontBold]}
                 >
                   {label as string}
                 </Animated.Text>

@@ -11,40 +11,46 @@ import { use18KGoldPrice } from '@/lib/hooks/useGold';
 import { Plus, Coins } from 'lucide-react-native';
 import AddProductModal from '@/components/AddProductModal';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function CalculateScreen() {
   const { data: goldPrice, isLoading } = use18KGoldPrice();
   const [modalVisible, setModalVisible] = useState(false);
   const { theme } = useTheme();
+  const { t, i18n } = useTranslation();
+  const fontRegular = useLocalizedFont('regular');
+  const fontBold = useLocalizedFont('bold');
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('fa-IR').format(Math.round(num));
+    const locale = i18n.language === 'fa' ? 'fa-IR' : 'en-US';
+    return new Intl.NumberFormat(locale).format(Math.round(num));
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>محاسبه طلا</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>قیمت محصول را وارد کنید و معادل طلای آن را ببینید</Text>
+        <Text style={[styles.title, fontBold, { color: theme.colors.text }]}>{t('calculate.title')}</Text>
+        <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary }]}>{t('calculate.subtitle')}</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>در حال دریافت قیمت طلا...</Text>
+            <Text style={[styles.loadingText, fontRegular, { color: theme.colors.textSecondary }]}>{t('calculate.fetchingGoldPrice')}</Text>
           </View>
         ) : goldPrice ? (
           <View style={[styles.goldCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.primary }]}>
             <Coins size={32} color={theme.colors.primary} strokeWidth={2} />
-            <Text style={[styles.goldLabel, { color: theme.colors.textTertiary }]}>قیمت طلای 18 عیار</Text>
-            <Text style={[styles.goldPrice, { color: theme.colors.primary }]}>{formatNumber(goldPrice.price)} تومان</Text>
-            <Text style={[styles.goldUnit, { color: theme.colors.textTertiary }]}>هر گرم</Text>
+            <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textTertiary }]}>{t('calculate.goldPrice')}</Text>
+            <Text style={[styles.goldPrice, fontBold, { color: theme.colors.primary }]}>{formatNumber(goldPrice.price)} {i18n.language === 'fa' ? 'تومان' : 'Toman'}</Text>
+            <Text style={[styles.goldUnit, fontRegular, { color: theme.colors.textTertiary }]}>{t('calculate.perGram')}</Text>
           </View>
         ) : (
           <View style={styles.errorContainer}>
             <Coins size={48} color={theme.colors.textSecondary} strokeWidth={2} />
-            <Text style={[styles.errorText, { color: theme.colors.textSecondary }]}>خطا در دریافت قیمت طلا</Text>
+            <Text style={[styles.errorText, fontRegular, { color: theme.colors.textSecondary }]}>{t('calculate.goldPriceError')}</Text>
           </View>
         )}
 
@@ -54,7 +60,7 @@ export default function CalculateScreen() {
           disabled={!goldPrice}
         >
           <Plus size={24} color={theme.colors.background} strokeWidth={2} />
-          <Text style={[styles.addButtonText, { color: theme.colors.background }]}>افزودن محصول جدید</Text>
+          <Text style={[styles.addButtonText, fontBold, { color: theme.colors.background }]}>{t('calculate.addNewProduct')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -80,13 +86,11 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 4,
-    textAlign: 'right',
-    fontFamily: 'Vazirmatn_700Bold',
+    textAlign: 'left',
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'right',
-    fontFamily: 'Vazirmatn_400Regular',
+    textAlign: 'left',
   },
   content: {
     flex: 1,
@@ -101,7 +105,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 16,
     textAlign: 'center',
-    fontFamily: 'Vazirmatn_400Regular',
   },
   goldCard: {
     borderRadius: 16,
@@ -113,18 +116,15 @@ const styles = StyleSheet.create({
   goldLabel: {
     fontSize: 16,
     marginTop: 12,
-    fontFamily: 'Vazirmatn_400Regular',
   },
   goldPrice: {
     fontSize: 36,
     fontWeight: '700',
     marginTop: 8,
-    fontFamily: 'Vazirmatn_700Bold',
   },
   goldUnit: {
     fontSize: 14,
     marginTop: 4,
-    fontFamily: 'Vazirmatn_400Regular',
   },
   errorContainer: {
     alignItems: 'center',
@@ -135,7 +135,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 16,
     textAlign: 'center',
-    fontFamily: 'Vazirmatn_400Regular',
   },
   addButton: {
     borderRadius: 16,
@@ -151,6 +150,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginRight: 8,
-    fontFamily: 'Vazirmatn_700Bold',
   },
 });

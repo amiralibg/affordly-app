@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   Switch,
 } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -13,12 +12,16 @@ import { LogOut, Moon, Sun, Languages } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage } from '@/i18n';
+import { showToast } from '@/lib/toast';
+import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const { theme, isDark, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
+  const fontRegular = useLocalizedFont('regular');
+  const fontBold = useLocalizedFont('bold');
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,31 +36,24 @@ export default function ProfileScreen() {
 
     await changeLanguage(lang);
 
-    Alert.alert(
-      lang === 'fa' ? 'موفق' : 'Success',
-      lang === 'fa'
-        ? 'زبان تغییر کرد. برای اعمال کامل تغییرات، لطفاً اپلیکیشن را ببندید و دوباره باز کنید.'
-        : 'Language changed. Please close and reopen the app to apply RTL layout changes.',
-      [
-        {
-          text: lang === 'fa' ? 'باشه' : 'OK',
-        }
-      ]
+    showToast.info(
+      t('common.success'),
+      t('profile.restartRequired')
     );
   };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>تنظیمات</Text>
-        <Text style={[styles.email, { color: theme.colors.textSecondary }]}>{user?.email || 'user@example.com'}</Text>
+        <Text style={[styles.title, fontBold, { color: theme.colors.text }]}>{t('profile.title')}</Text>
+        <Text style={[styles.email, fontRegular, { color: theme.colors.textSecondary }]}>{user?.email || 'user@example.com'}</Text>
       </View>
 
       {/* Language Selector */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>زبان</Text>
-        <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
-          انتخاب زبان اپلیکیشن
+        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text }]}>{t('profile.language')}</Text>
+        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary }]}>
+          {t('profile.languageDescription')}
         </Text>
 
         <View style={styles.optionsRow}>
@@ -103,9 +99,9 @@ export default function ProfileScreen() {
 
       {/* Theme Selector */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>تم</Text>
-        <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
-          انتخاب حالت تاریک یا روشن
+        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text }]}>{t('profile.theme')}</Text>
+        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary }]}>
+          {t('profile.themeDescription')}
         </Text>
 
         <View style={[styles.themeContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
@@ -114,8 +110,8 @@ export default function ProfileScreen() {
           ) : (
             <Sun size={20} color={theme.colors.textSecondary} strokeWidth={2} />
           )}
-          <Text style={[styles.themeLabel, { color: theme.colors.text }]}>
-            {isDark ? 'حالت تاریک' : 'حالت روشن'}
+          <Text style={[styles.themeLabel, fontRegular, { color: theme.colors.text }]}>
+            {isDark ? t('profile.darkMode') : t('profile.lightMode')}
           </Text>
           <Switch
             value={isDark}
@@ -131,7 +127,7 @@ export default function ProfileScreen() {
         onPress={handleSignOut}
       >
         <LogOut size={20} color={theme.colors.error} strokeWidth={2} />
-        <Text style={[styles.signOutText, { color: theme.colors.error }]}>خروج از حساب</Text>
+        <Text style={[styles.signOutText, fontBold, { color: theme.colors.error }]}>{t('profile.signOut')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -150,12 +146,12 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: 'left',
     fontFamily: 'Vazirmatn_700Bold',
   },
   email: {
     fontSize: 16,
-    textAlign: 'right',
+    textAlign: 'left',
     fontFamily: 'Vazirmatn_400Regular',
   },
   section: {
@@ -165,14 +161,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: 'left',
     fontFamily: 'Vazirmatn_700Bold',
   },
   sectionDescription: {
     fontSize: 14,
     marginBottom: 24,
     lineHeight: 20,
-    textAlign: 'right',
+    textAlign: 'left',
     fontFamily: 'Vazirmatn_400Regular',
   },
   optionsRow: {
@@ -208,7 +204,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginRight: 12,
-    textAlign: 'right',
+    textAlign: 'left',
     fontFamily: 'Vazirmatn_400Regular',
   },
   signOutButton: {

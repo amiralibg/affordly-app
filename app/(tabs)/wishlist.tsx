@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   ActivityIndicator,
   TextInput,
   Modal,
@@ -14,6 +13,8 @@ import { useProducts, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/use
 import { Heart, Trash2, Plus, Coins, X } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLocalizedFont } from '@/hooks/useLocalizedFont';
+import { showToast } from '@/lib/toast';
+import { useTranslation } from 'react-i18next';
 
 export default function WishlistScreen() {
   const { data: products = [], isLoading } = useProducts();
@@ -22,12 +23,15 @@ export default function WishlistScreen() {
   const { theme } = useTheme();
   const fontRegular = useLocalizedFont('regular');
   const fontBold = useLocalizedFont('bold');
+  const { t, i18n } = useTranslation();
 
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [goldAmount, setGoldAmount] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('fa-IR').format(Math.round(num));
+    const locale = i18n.language === 'fa' ? 'fa-IR' : 'en-US';
+    return new Intl.NumberFormat(locale).format(Math.round(num));
   };
 
   const wishlistItems = products.filter(p => p.isWishlisted);
@@ -40,7 +44,7 @@ export default function WishlistScreen() {
     const addAmount = parseFloat(goldAmount);
 
     if (isNaN(addAmount) || addAmount <= 0) {
-      Alert.alert('خطا', 'لطفاً مقدار معتبری وارد کنید');
+      showToast.error(t('common.error'), t('wishlist.enterValidAmount'));
       return;
     }
 
@@ -51,35 +55,30 @@ export default function WishlistScreen() {
         id: productId,
         data: { savedGoldAmount: newAmount },
       });
-      Alert.alert('موفق', 'طلای ذخیره شده به‌روزرسانی شد');
+      showToast.success(t('common.success'), t('wishlist.goldUpdated'));
       setEditingProductId(null);
       setGoldAmount('');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'خطا در به‌روزرسانی';
-      Alert.alert('خطا', errorMessage);
+      const errorMessage = error.response?.data?.error || t('wishlist.updateError');
+      showToast.error(t('common.error'), errorMessage);
     }
   };
 
   const handleDeleteItem = (productId: string, productName: string) => {
-    Alert.alert(
-      'حذف محصول',
-      `آیا می‌خواهید "${productName}" را حذف کنید؟`,
-      [
-        { text: 'لغو', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteProduct.mutateAsync(productId);
-            } catch (error: any) {
-              const errorMessage = error.response?.data?.error || 'خطا در حذف محصول';
-              Alert.alert('خطا', errorMessage);
-            }
-          },
-        },
-      ]
-    );
+    setDeleteConfirm({ id: productId, name: productName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    try {
+      await deleteProduct.mutateAsync(deleteConfirm.id);
+      showToast.success(t('common.success'), t('common.delete'));
+      setDeleteConfirm(null);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || t('wishlist.deleteError');
+      showToast.error(t('common.error'), errorMessage);
+    }
   };
 
   if (isLoading) {
@@ -93,9 +92,9 @@ export default function WishlistScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { borderBottomColor: theme.colors.border, backgroundColor: theme.colors.card }]}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>علاقه‌مندی‌ها</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          پیگیری پیشرفت خرید محصولات با طلا
+        <Text style={[styles.title, fontBold, { color: theme.colors.text }]}>{t('wishlist.title')}</Text>
+        <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary }]}>
+          {t('wishlist.subtitle')}
         </Text>
       </View>
 
@@ -104,7 +103,7 @@ export default function WishlistScreen() {
           <View style={styles.emptyState}>
             <Heart size={48} color={theme.colors.textSecondary} strokeWidth={2} />
             <Text style={[styles.emptyText, fontRegular, { color: theme.colors.textSecondary }]}>
-              هنوز محصولی به علاقه‌مندی اضافه نکرده‌اید
+              {t('wishlist.noItems')}
             </Text>
           </View>
         ) : (
@@ -124,26 +123,26 @@ export default function WishlistScreen() {
                 </View>
 
                 <View style={styles.priceRow}>
-                  <Text style={[styles.price, fontRegular, { color: theme.colors.textSecondary }]}>{formatNumber(item.price)} تومان</Text>
+                  <Text style={[styles.price, fontRegular, { color: theme.colors.textSecondary }]}>{formatNumber(item.price)} {t('wishlist.toman')}</Text>
                 </View>
 
                 <View style={styles.goldInfo}>
                   <View style={styles.goldRow}>
-                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>معادل طلا:</Text>
+                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>{t('wishlist.goldEquivalent')}</Text>
                     <Text style={[styles.goldValue, fontBold, { color: theme.colors.primary }]}>
-                      {(item.goldEquivalent * 1000).toFixed(0)} میلی‌گرم
+                      {(item.goldEquivalent * 1000).toFixed(0)} {t('wishlist.milligrams')}
                     </Text>
                   </View>
                   <View style={styles.goldRow}>
-                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>ذخیره شده:</Text>
+                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>{t('wishlist.savedGold')}</Text>
                     <Text style={[styles.goldValueSaved, fontBold, { color: theme.colors.success }]}>
-                      {(item.savedGoldAmount * 1000).toFixed(0)} میلی‌گرم
+                      {(item.savedGoldAmount * 1000).toFixed(0)} {t('wishlist.milligrams')}
                     </Text>
                   </View>
                   <View style={styles.goldRow}>
-                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>باقی‌مانده:</Text>
+                    <Text style={[styles.goldLabel, fontRegular, { color: theme.colors.textSecondary }]}>{t('wishlist.remaining')}</Text>
                     <Text style={[styles.goldValueRemaining, fontBold, { color: theme.colors.textTertiary }]}>
-                      {(remaining * 1000).toFixed(0)} میلی‌گرم
+                      {(remaining * 1000).toFixed(0)} {t('wishlist.milligrams')}
                     </Text>
                   </View>
                 </View>
@@ -165,12 +164,12 @@ export default function WishlistScreen() {
                   }}
                 >
                   <Plus size={20} color={theme.colors.background} strokeWidth={2} />
-                  <Text style={[styles.addButtonText, fontBold, { color: theme.colors.background }]}>افزودن طلا</Text>
+                  <Text style={[styles.addButtonText, fontBold, { color: theme.colors.background }]}>{t('wishlist.addGold')}</Text>
                 </TouchableOpacity>
 
                 {progress >= 100 && (
                   <View style={[styles.completedBadge, { backgroundColor: theme.colors.success + '26' }]}>
-                    <Text style={[styles.completedText, fontBold, { color: theme.colors.success }]}>✓ هدف به دست آمد!</Text>
+                    <Text style={[styles.completedText, fontBold, { color: theme.colors.success }]}>{t('wishlist.goalReached')}</Text>
                   </View>
                 )}
               </View>
@@ -188,14 +187,14 @@ export default function WishlistScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContainer, { backgroundColor: theme.colors.card }]}>
             <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
-              <Text style={[styles.modalTitle, fontBold, { color: theme.colors.text }]}>افزودن طلا</Text>
+              <Text style={[styles.modalTitle, fontBold, { color: theme.colors.text }]}>{t('wishlist.addGold')}</Text>
               <TouchableOpacity onPress={() => setEditingProductId(null)}>
                 <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalContent}>
-              <Text style={[styles.modalLabel, fontRegular, { color: theme.colors.text }]}>مقدار طلا (گرم)</Text>
+              <Text style={[styles.modalLabel, fontRegular, { color: theme.colors.text }]}>{t('wishlist.goldAmount')}</Text>
               <View style={[styles.inputWithIcon, { backgroundColor: theme.colors.background, borderColor: theme.colors.cardBorder }]}>
                 <Coins size={20} color={theme.colors.textSecondary} strokeWidth={2} />
                 <TextInput
@@ -218,7 +217,37 @@ export default function WishlistScreen() {
                   }
                 }}
               >
-                <Text style={[styles.saveButtonText, fontBold, { color: theme.colors.background }]}>ذخیره</Text>
+                <Text style={[styles.saveButtonText, fontBold, { color: theme.colors.background }]}>{t('wishlist.save')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={deleteConfirm !== null}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setDeleteConfirm(null)}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={[styles.confirmContainer, { backgroundColor: theme.colors.card }]}>
+            <Text style={[styles.confirmTitle, fontBold, { color: theme.colors.text }]}>{t('wishlist.removeProduct')}</Text>
+            <Text style={[styles.confirmMessage, fontRegular, { color: theme.colors.textSecondary }]}>
+              {t('wishlist.removeConfirm', { name: deleteConfirm?.name })}
+            </Text>
+            <View style={styles.confirmButtons}>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.confirmButtonCancel, { backgroundColor: theme.colors.background, borderColor: theme.colors.cardBorder }]}
+                onPress={() => setDeleteConfirm(null)}
+              >
+                <Text style={[styles.confirmButtonText, fontBold, { color: theme.colors.text }]}>{t('wishlist.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmButton, styles.confirmButtonDelete, { backgroundColor: '#DC2626' }]}
+                onPress={confirmDelete}
+              >
+                <Text style={[styles.confirmButtonText, fontBold, { color: '#FFFFFF' }]}>{t('wishlist.remove')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -244,11 +273,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   subtitle: {
     fontSize: 16,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   content: {
     flex: 1,
@@ -284,14 +313,14 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 20,
     flex: 1,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   priceRow: {
     marginBottom: 16,
   },
   price: {
     fontSize: 18,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   goldInfo: {
     borderRadius: 12,
@@ -380,7 +409,7 @@ const styles = StyleSheet.create({
   modalLabel: {
     fontSize: 16,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   inputWithIcon: {
     flexDirection: 'row-reverse',
@@ -394,7 +423,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     marginRight: 12,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   saveButton: {
     borderRadius: 12,
@@ -403,5 +432,46 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontSize: 18,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  confirmContainer: {
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    marginBottom: 12,
+    textAlign: 'left',
+  },
+  confirmMessage: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'left',
+    lineHeight: 24,
+  },
+  confirmButtons: {
+    flexDirection: 'row-reverse',
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  confirmButtonCancel: {
+    borderWidth: 1,
+  },
+  confirmButtonDelete: {},
+  confirmButtonText: {
+    fontSize: 16,
   },
 });

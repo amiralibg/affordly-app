@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 const getApiUrl = () => {
   if (!__DEV__) {
-    return 'https://affordly-api.amiralibg.xyz/api';
+    return 'https://goldify-api.amiralibg.xyz/api';
   }
 
   // Development URLs based on platform

@@ -19,6 +19,8 @@ import {
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/lib/toast';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -66,6 +68,7 @@ function RootLayoutContent() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+      <Toast config={toastConfig} />
     </>
   );
 }
