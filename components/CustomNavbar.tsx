@@ -1,90 +1,92 @@
-import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Coins, Heart, Settings } from 'lucide-react-native';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-} from 'react-native-reanimated';
+import { Coins, Heart, History } from 'lucide-react-native';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useTheme } from '@/contexts/ThemeContext';
-import { BlurView } from 'expo-blur';
-import { useTranslation } from 'react-i18next';
-import { useLocalizedFont } from '@/hooks/useLocalizedFont';
+import { TEXT } from '@/constants/text';
 
-const AnimatedTouchableOpacity =
-  Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const CustomNavBar: React.FC<BottomTabBarProps> = ({
   state,
-  descriptors,
+  descriptors: _descriptors,
   navigation,
 }) => {
   const { theme } = useTheme();
-  const { t } = useTranslation();
-  const fontBold = useLocalizedFont('bold');
+
+  // Helper function to get tab background color
+  const getTabBackgroundColor = (isFocused: boolean) => ({
+    backgroundColor: isFocused ? theme.colors.primary + '26' : 'transparent',
+  });
 
   const dynamicStyles = StyleSheet.create({
     container: {
-      position: 'absolute',
-      width: '70%',
       alignSelf: 'center',
+      borderColor: theme.colors.borderLight,
+      borderRadius: 32,
+      borderWidth: 1.5,
       bottom: 42,
-      borderRadius: 28,
       overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      position: 'absolute',
+      width: '90%',
     },
     glowOuter: {
       ...Platform.select({
         ios: {
+          // Enhanced glow effect for depth
           shadowColor: theme.colors.primary,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.4,
-          shadowRadius: 20,
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: theme.isDark ? 0.5 : 0.3,
+          shadowRadius: 24,
         },
         android: {
-          elevation: 12,
+          elevation: 16,
         },
       }),
     },
     innerContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 14,
-      backgroundColor: theme.isDark ? theme.colors.card + 'E6' : '#FFFFFFBF',
-      borderRadius: 24,
+      // Layered background for depth
+      backgroundColor: theme.isDark ? theme.colors.cardElevated : theme.colors.cardElevated + 'E0',
+      borderRadius: 30,
+      flexDirection: 'row',
+      gap: 8,
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
     },
     text: {
       color: theme.colors.primary,
-      marginRight: 8,
-      fontWeight: '600',
-      fontSize: 13,
+      fontSize: 14,
+
+      marginLeft: 6,
     },
   });
 
   const getIconByRouteName = (routeName: string, color: string) => {
+    const size = 20; // Slightly larger icons
+    const strokeWidth = 2.5; // Bolder strokes for clarity
+
     switch (routeName) {
       case 'index':
-        return <Coins size={18} color={color} strokeWidth={2} />;
+        return <Coins size={size} color={color} strokeWidth={strokeWidth} />;
       case 'wishlist':
-        return <Heart size={18} color={color} strokeWidth={2} />;
-      case 'profile':
-        return <Settings size={18} color={color} strokeWidth={2} />;
+        return <Heart size={size} color={color} strokeWidth={strokeWidth} />;
+      case 'history':
+        return <History size={size} color={color} strokeWidth={strokeWidth} />;
       default:
-        return <Coins size={18} color={color} strokeWidth={2} />;
+        return <Coins size={size} color={color} strokeWidth={strokeWidth} />;
     }
   };
 
   const getLabel = (routeName: string) => {
     switch (routeName) {
       case 'index':
-        return t('navigation.calculate');
+        return TEXT.navigation.calculate;
       case 'wishlist':
-        return t('navigation.wishlist');
-      case 'profile':
-        return t('navigation.settings');
+        return TEXT.navigation.wishlist;
+      case 'history':
+        return TEXT.navigation.history;
       default:
         return routeName;
     }
@@ -92,13 +94,9 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
 
   return (
     <View style={[dynamicStyles.container, dynamicStyles.glowOuter]}>
-      <BlurView
-        intensity={80}
-        tint={theme.isDark ? 'dark' : 'light'}
-        style={dynamicStyles.innerContainer}
-      >
+      <View style={dynamicStyles.innerContainer}>
         {state.routes.map((route, index) => {
-          if (['_sitemap', '+not-found'].includes(route.name)) return null;
+          if (['_sitemap', '+not-found', 'profile'].includes(route.name)) return null;
 
           const label = getLabel(route.name);
           const isFocused = state.index === index;
@@ -120,14 +118,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
               layout={LinearTransition.springify().mass(0.5)}
               key={route.key}
               onPress={onPress}
-              style={[
-                styles.tabItem,
-                {
-                  backgroundColor: isFocused
-                    ? theme.colors.primary + '26'
-                    : 'transparent',
-                },
-              ]}
+              style={[styles.tabItem, getTabBackgroundColor(isFocused)]}
             >
               {getIconByRouteName(
                 route.name,
@@ -137,7 +128,7 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
                 <Animated.Text
                   entering={FadeIn.duration(200)}
                   exiting={FadeOut.duration(200)}
-                  style={[dynamicStyles.text, fontBold]}
+                  style={dynamicStyles.text}
                 >
                   {label as string}
                 </Animated.Text>
@@ -145,21 +136,24 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
             </AnimatedTouchableOpacity>
           );
         })}
-      </BlurView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   tabItem: {
-    flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    height: 40,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    marginHorizontal: 4,
-    gap: 6,
+    borderRadius: 28,
+    flexDirection: 'row',
+    fontFamily: 'Vazirmatn_700Bold',
+    gap: 8,
+    height: 48,
+    justifyContent: 'center',
+    marginHorizontal: 2,
+    paddingHorizontal: 20,
+    // Add subtle press feedback
+    transform: [{ scale: 1 }],
   },
 });
 

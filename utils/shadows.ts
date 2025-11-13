@@ -8,10 +8,7 @@ import { Platform, ViewStyle } from 'react-native';
  * @param color - Shadow color (default: '#000')
  * @returns Platform-specific shadow styles
  */
-export const createShadow = (
-  elevation: number = 2,
-  color: string = '#000'
-): ViewStyle => {
+export const createShadow = (elevation: number = 2, color: string = '#000'): ViewStyle => {
   return Platform.select({
     ios: {
       shadowColor: color,

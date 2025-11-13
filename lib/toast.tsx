@@ -1,74 +1,94 @@
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
-import { useTheme } from '@/contexts/ThemeContext';
+import Toast, { BaseToast, ErrorToast, BaseToastProps } from 'react-native-toast-message';
+
+// Extracted style constants to avoid inline styles
+const contentContainerStyle = { paddingHorizontal: 15 };
+
+const successStyle = {
+  borderLeftColor: '#10B981',
+  backgroundColor: '#065F46',
+  borderRadius: 12,
+  height: 60,
+};
+
+const successText1Style = {
+  fontSize: 15,
+  fontWeight: '600' as const,
+  color: '#ECFDF5',
+  fontFamily: 'Vazirmatn_700Bold',
+};
+
+const successText2Style = {
+  fontSize: 13,
+  color: '#D1FAE5',
+  fontFamily: 'Vazirmatn_400Regular',
+};
+
+const errorStyle = {
+  borderLeftColor: '#EF4444',
+  backgroundColor: '#7F1D1D',
+  borderRadius: 12,
+  height: 60,
+};
+
+const errorText1Style = {
+  fontSize: 15,
+  fontWeight: '600' as const,
+  color: '#FEE2E2',
+  fontFamily: 'Vazirmatn_700Bold',
+};
+
+const errorText2Style = {
+  fontSize: 13,
+  color: '#FECACA',
+  fontFamily: 'Vazirmatn_400Regular',
+};
+
+const infoStyle = {
+  borderLeftColor: '#3B82F6',
+  backgroundColor: '#1E3A8A',
+  borderRadius: 12,
+  height: 60,
+};
+
+const infoText1Style = {
+  fontSize: 15,
+  fontWeight: '600' as const,
+  color: '#DBEAFE',
+  fontFamily: 'Vazirmatn_700Bold',
+};
+
+const infoText2Style = {
+  fontSize: 13,
+  color: '#BFDBFE',
+  fontFamily: 'Vazirmatn_400Regular',
+};
 
 export const toastConfig = {
-  success: (props: any) => (
+  success: (props: BaseToastProps) => (
     <BaseToast
       {...props}
-      style={{
-        borderLeftColor: '#10B981',
-        backgroundColor: '#065F46',
-        borderRadius: 12,
-        height: 60,
-      }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#ECFDF5',
-        fontFamily: 'Vazirmatn_700Bold',
-      }}
-      text2Style={{
-        fontSize: 13,
-        color: '#D1FAE5',
-        fontFamily: 'Vazirmatn_400Regular',
-      }}
+      style={successStyle}
+      contentContainerStyle={contentContainerStyle}
+      text1Style={successText1Style}
+      text2Style={successText2Style}
     />
   ),
-  error: (props: any) => (
+  error: (props: BaseToastProps) => (
     <ErrorToast
       {...props}
-      style={{
-        borderLeftColor: '#EF4444',
-        backgroundColor: '#7F1D1D',
-        borderRadius: 12,
-        height: 60,
-      }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#FEE2E2',
-        fontFamily: 'Vazirmatn_700Bold',
-      }}
-      text2Style={{
-        fontSize: 13,
-        color: '#FECACA',
-        fontFamily: 'Vazirmatn_400Regular',
-      }}
+      style={errorStyle}
+      contentContainerStyle={contentContainerStyle}
+      text1Style={errorText1Style}
+      text2Style={errorText2Style}
     />
   ),
-  info: (props: any) => (
+  info: (props: BaseToastProps) => (
     <BaseToast
       {...props}
-      style={{
-        borderLeftColor: '#3B82F6',
-        backgroundColor: '#1E3A8A',
-        borderRadius: 12,
-        height: 60,
-      }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#DBEAFE',
-        fontFamily: 'Vazirmatn_700Bold',
-      }}
-      text2Style={{
-        fontSize: 13,
-        color: '#BFDBFE',
-        fontFamily: 'Vazirmatn_400Regular',
-      }}
+      style={infoStyle}
+      contentContainerStyle={contentContainerStyle}
+      text1Style={infoText1Style}
+      text2Style={infoText2Style}
     />
   ),
 };

@@ -123,9 +123,7 @@ export const authApi = {
 
   // NEW: Revoke specific session
   revokeSession: async (sessionId: string): Promise<{ message: string }> => {
-    const response = await apiClient.delete<{ message: string }>(
-      `/auth/sessions/${sessionId}`
-    );
+    const response = await apiClient.delete<{ message: string }>(`/auth/sessions/${sessionId}`);
     return response.data;
   },
 };

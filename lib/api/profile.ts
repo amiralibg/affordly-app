@@ -4,6 +4,7 @@ export interface Profile {
   _id: string;
   userId: string;
   monthlySalary: number;
+  monthlySavingsPercentage: number;
   currency: string;
   createdAt: string;
   updatedAt: string;
@@ -11,6 +12,7 @@ export interface Profile {
 
 export interface UpdateProfileData {
   monthlySalary?: number;
+  monthlySavingsPercentage?: number;
   currency?: string;
 }
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { productsApi, CreateProductData, UpdateProductData } from '../api/products';
+import { productsApi, UpdateProductData } from '../api/products';
 
 export const useProducts = () => {
   return useQuery({
@@ -29,7 +29,7 @@ export const useCreateProduct = () => {
   return useMutation({
     mutationFn: productsApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 };
@@ -41,8 +41,8 @@ export const useUpdateProduct = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdateProductData }) =>
       productsApi.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
     },
   });
 };
@@ -53,7 +53,7 @@ export const useDeleteProduct = () => {
   return useMutation({
     mutationFn: productsApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 };
@@ -64,7 +64,7 @@ export const useToggleWishlist = () => {
   return useMutation({
     mutationFn: productsApi.toggleWishlist,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      void queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 };

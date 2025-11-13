@@ -1,5 +1,13 @@
 import apiClient from './client';
 
+export interface SavingsTimeline {
+  monthsToSave: number;
+  daysToSave: number;
+  estimatedCompletionDate: string;
+  monthlySavingsAmount: number;
+  goldToSavePerMonth: number;
+}
+
 export interface Product {
   _id: string;
   userId: string;
@@ -9,6 +17,7 @@ export interface Product {
   goldPriceAtCreation: number;
   isWishlisted: boolean;
   savedGoldAmount: number;
+  timeline?: SavingsTimeline | null;
   createdAt: string;
   updatedAt: string;
 }

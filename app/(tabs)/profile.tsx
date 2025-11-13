@@ -1,225 +1,383 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   ScrollView,
   Switch,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import type { TextStyle, ViewStyle } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
-import { LogOut, Moon, Sun, Languages } from 'lucide-react-native';
+import { LogOut, Moon, Sun, Wallet, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import { changeLanguage } from '@/i18n';
 import { showToast } from '@/lib/toast';
-import { useLocalizedFont } from '@/hooks/useLocalizedFont';
+import { useProfile, useUpdateProfile } from '@/lib/hooks/useProfile';
+import ElevatedCard from '@/components/ui/ElevatedCard';
+import GlassInput from '@/components/ui/GlassInput';
+import DepthButton from '@/components/ui/DepthButton';
+import StatCard from '@/components/ui/StatCard';
+import AppHeader from '@/components/AppHeader';
+import { TEXT, formatNumber } from '@/constants/text';
+import { persianToEnglish, englishToPersian } from '@/utils/numbers';
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const { theme, isDark, toggleTheme } = useTheme();
-  const { t, i18n } = useTranslation();
-  const fontRegular = useLocalizedFont('regular');
-  const fontBold = useLocalizedFont('bold');
+
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+
+  const [monthlySalary, setMonthlySalary] = useState('');
+  const [savingsPercentage, setSavingsPercentage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      // Convert to Persian digits with comma formatting for display
+      if (profile.monthlySalary > 0) {
+        const formatted = new Intl.NumberFormat('en-US').format(profile.monthlySalary);
+        setMonthlySalary(englishToPersian(formatted));
+      } else {
+        setMonthlySalary('');
+      }
+      setSavingsPercentage(
+        profile.monthlySavingsPercentage > 0
+          ? englishToPersian(profile.monthlySavingsPercentage.toString())
+          : englishToPersian('20')
+      );
+    }
+  }, [profile]);
+
+  const handleSalaryChange = (text: string) => {
+    // Convert Persian/Arabic digits to English
+    const converted = persianToEnglish(text);
+    const cleanedText = converted.replace(/[^\d]/g, '');
+
+    if (cleanedText === '') {
+      setMonthlySalary('');
+      return;
+    }
+
+    // Format with commas (using English format)
+    const formatted = new Intl.NumberFormat('en-US').format(parseInt(cleanedText));
+
+    // Convert to Persian digits for display
+    const persianFormatted = englishToPersian(formatted);
+    setMonthlySalary(persianFormatted);
+  };
+
+  const handlePercentageChange = (text: string) => {
+    // Convert Persian/Arabic digits to English
+    const converted = persianToEnglish(text);
+    const cleanedText = converted.replace(/[^\d]/g, '');
+    const value = parseInt(cleanedText) || 0;
+
+    if (cleanedText === '') {
+      setSavingsPercentage('');
+      return;
+    }
+
+    if (value <= 100) {
+      // Store with Persian digits for display
+      setSavingsPercentage(englishToPersian(cleanedText));
+    }
+  };
+
+  const handleSaveFinancials = async () => {
+    // Convert Persian digits to English, remove commas and parse
+    const englishSalary = persianToEnglish(monthlySalary);
+    const salary = parseInt(englishSalary.replace(/,/g, '')) || 0;
+    const percentage = parseInt(persianToEnglish(savingsPercentage)) || 20;
+
+    if (salary <= 0) {
+      showToast.error(TEXT.common.error, TEXT.profile.enterValidSalary);
+      return;
+    }
+
+    if (percentage <= 0 || percentage > 100) {
+      showToast.error(TEXT.common.error, TEXT.profile.enterValidPercentage);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateProfile.mutateAsync({
+        monthlySalary: salary,
+        monthlySavingsPercentage: percentage,
+      });
+      showToast.success(TEXT.common.success, TEXT.profile.financialsUpdated);
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        TEXT.profile.updateError;
+      showToast.error(TEXT.common.error, errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
   };
 
-  const handleLanguageChange = async (lang: string) => {
-    const currentLang = i18n.language;
-    console.log("Current language:", currentLang);
-    if (currentLang === lang) return;
+  const containerStyle = useMemo(
+    () => ({ flex: 1, backgroundColor: theme.colors.background }),
+    [theme.colors.background]
+  );
 
-    console.log("Changing language to:", lang);
+  const titleStyle = useMemo(() => ({ color: theme.colors.text }), [theme.colors.text]);
 
-    await changeLanguage(lang);
+  const emailStyle = useMemo(
+    () => ({ color: theme.colors.textSecondary }),
+    [theme.colors.textSecondary]
+  );
 
-    showToast.info(
-      t('common.success'),
-      t('profile.restartRequired')
+  const sectionDescriptionStyle = useMemo(
+    () => ({ color: theme.colors.textSecondary }),
+    [theme.colors.textSecondary]
+  );
+
+  const cardRowStyle = useMemo<ViewStyle>(
+    () => ({
+      alignItems: 'center',
+      flexDirection: 'row',
+      padding: theme.spacing.md,
+    }),
+    [theme.spacing.md]
+  );
+
+  const themeLabelDynamicStyle = useMemo<TextStyle>(
+    () => ({
+      color: theme.colors.text,
+      marginLeft: theme.spacing.md,
+    }),
+    [theme.colors.text, theme.spacing.md]
+  );
+
+  const signOutButtonStyle = useMemo<ViewStyle>(
+    () => ({
+      margin: theme.spacing.lg,
+      borderColor: theme.colors.error,
+      backgroundColor: theme.colors.error,
+      shadowColor: 'transparent',
+    }),
+    [theme.spacing.lg, theme.colors.error]
+  );
+
+  const signOutTextStyle = useMemo<TextStyle>(
+    () => ({
+      color: theme.colors.background,
+    }),
+    [theme.colors.background]
+  );
+
+  if (profileLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent, containerStyle]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
     );
-  };
+  }
+
+  // Convert Persian digits to English and remove commas before parsing for calculations
+  const englishSalary = persianToEnglish(monthlySalary);
+  const salaryNum = parseInt(englishSalary.replace(/,/g, '')) || 0;
+  const percentageNum = parseInt(persianToEnglish(savingsPercentage)) || 0;
+  const monthlySavingsAmount =
+    salaryNum > 0 && percentageNum > 0 ? (salaryNum * percentageNum) / 100 : 0;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.title, fontBold, { color: theme.colors.text }]}>{t('profile.title')}</Text>
-        <Text style={[styles.email, fontRegular, { color: theme.colors.textSecondary }]}>{user?.email || 'user@example.com'}</Text>
-      </View>
-
-      {/* Language Selector */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text }]}>{t('profile.language')}</Text>
-        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary }]}>
-          {t('profile.languageDescription')}
-        </Text>
-
-        <View style={styles.optionsRow}>
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              {
-                backgroundColor: i18n.language === 'en' ? theme.colors.primary : theme.colors.card,
-                borderColor: theme.colors.cardBorder
-              }
-            ]}
-            onPress={() => handleLanguageChange('en')}
-          >
-            <Languages size={20} color={i18n.language === 'en' ? theme.colors.background : theme.colors.textSecondary} strokeWidth={2} />
-            <Text style={[
-              styles.optionText,
-              { color: i18n.language === 'en' ? theme.colors.background : theme.colors.text }
-            ]}>
-              English
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.optionButton,
-              {
-                backgroundColor: i18n.language === 'fa' ? theme.colors.primary : theme.colors.card,
-                borderColor: theme.colors.cardBorder
-              }
-            ]}
-            onPress={() => handleLanguageChange('fa')}
-          >
-            <Languages size={20} color={i18n.language === 'fa' ? theme.colors.background : theme.colors.textSecondary} strokeWidth={2} />
-            <Text style={[
-              styles.optionText,
-              { color: i18n.language === 'fa' ? theme.colors.background : theme.colors.text }
-            ]}>
-              فارسی
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Theme Selector */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, fontBold, { color: theme.colors.text }]}>{t('profile.theme')}</Text>
-        <Text style={[styles.sectionDescription, fontRegular, { color: theme.colors.textSecondary }]}>
-          {t('profile.themeDescription')}
-        </Text>
-
-        <View style={[styles.themeContainer, { backgroundColor: theme.colors.card, borderColor: theme.colors.cardBorder }]}>
-          {isDark ? (
-            <Moon size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-          ) : (
-            <Sun size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-          )}
-          <Text style={[styles.themeLabel, fontRegular, { color: theme.colors.text }]}>
-            {isDark ? t('profile.darkMode') : t('profile.lightMode')}
-          </Text>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
-            thumbColor={isDark ? theme.colors.primary : '#f4f3f4'}
-          />
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.signOutButton, { borderColor: theme.colors.error }]}
-        onPress={handleSignOut}
+    <View style={[styles.screen, containerStyle]}>
+      <AppHeader />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+        style={styles.keyboardAvoiding}
       >
-        <LogOut size={20} color={theme.colors.error} strokeWidth={2} />
-        <Text style={[styles.signOutText, fontBold, { color: theme.colors.error }]}>{t('profile.signOut')}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <ScrollView
+          style={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.userInfo}>
+            <Text style={[styles.email, emailStyle]}>{user?.email || 'user@example.com'}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, titleStyle]}>{TEXT.profile.financialSettings}</Text>
+            <Text style={[styles.sectionDescription, sectionDescriptionStyle]}>
+              {TEXT.profile.financialDescription}
+            </Text>
+
+            <View style={styles.inputGroup}>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  {
+                    color: theme.colors.text,
+                    marginBottom: theme.spacing.sm,
+                  },
+                ]}
+              >
+                {TEXT.profile.monthlySalary}
+              </Text>
+              <GlassInput
+                icon={<Wallet size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />}
+                placeholder="0"
+                value={monthlySalary}
+                onChangeText={handleSalaryChange}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text
+                style={[
+                  styles.inputLabel,
+                  {
+                    color: theme.colors.text,
+                    marginBottom: theme.spacing.sm,
+                  },
+                ]}
+              >
+                {TEXT.profile.savingsPercentage}
+              </Text>
+              <GlassInput
+                icon={<TrendingUp size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />}
+                placeholder="20"
+                value={savingsPercentage}
+                onChangeText={handlePercentageChange}
+                keyboardType="numeric"
+              />
+            </View>
+
+            {monthlySavingsAmount > 0 && (
+              <StatCard
+                icon={<TrendingUp size={32} color={theme.colors.primary} strokeWidth={2.5} />}
+                label={TEXT.profile.saveFinancials}
+                value={`${formatNumber(monthlySavingsAmount)} تومان`}
+                variant="primary"
+                style={{ marginBottom: theme.spacing.md }}
+              />
+            )}
+
+            <DepthButton
+              onPress={handleSaveFinancials}
+              disabled={isSaving}
+              loading={isSaving}
+              variant="primary"
+              size="large"
+            >
+              {TEXT.profile.saveFinancials}
+            </DepthButton>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              {TEXT.profile.theme}
+            </Text>
+            <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
+              {TEXT.profile.themeDescription}
+            </Text>
+
+            <ElevatedCard elevation="elevated" shadowLevel="small">
+              <View style={cardRowStyle}>
+                {isDark ? (
+                  <Moon size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                ) : (
+                  <Sun size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                )}
+                <Text style={[styles.themeLabel, themeLabelDynamicStyle]}>
+                  {isDark ? TEXT.profile.darkMode : TEXT.profile.lightMode}
+                </Text>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
+                  thumbColor={isDark ? theme.colors.primary : '#f4f3f4'}
+                />
+              </View>
+            </ElevatedCard>
+          </View>
+
+          <DepthButton
+            onPress={handleSignOut}
+            variant="primary"
+            size="large"
+            style={signOutButtonStyle}
+            textStyle={signOutTextStyle}
+            icon={<LogOut size={20} color={theme.colors.background} strokeWidth={2.5} />}
+            iconPosition="right"
+          >
+            {TEXT.profile.signOut}
+          </DepthButton>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  centerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
   },
-  header: {
-    padding: 24,
-    paddingTop: 60,
-    borderBottomWidth: 1,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 4,
-    textAlign: 'left',
-    fontFamily: 'Vazirmatn_700Bold',
-  },
   email: {
-    fontSize: 16,
-    textAlign: 'left',
     fontFamily: 'Vazirmatn_400Regular',
+    fontSize: 14,
+    textAlign: 'right',
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+    textAlign: 'right',
+  },
+  keyboardAvoiding: {
+    flex: 1,
+  },
+  screen: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   section: {
     padding: 24,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'left',
-    fontFamily: 'Vazirmatn_700Bold',
-  },
   sectionDescription: {
-    fontSize: 14,
-    marginBottom: 24,
-    lineHeight: 20,
-    textAlign: 'left',
     fontFamily: 'Vazirmatn_400Regular',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 24,
+    textAlign: 'right',
   },
-  optionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  optionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    gap: 8,
-  },
-  optionText: {
-    fontSize: 15,
-    fontWeight: '600',
+  sectionTitle: {
     fontFamily: 'Vazirmatn_700Bold',
-  },
-  themeContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
+    fontSize: 20,
+    marginBottom: 8,
+    textAlign: 'right',
   },
   themeLabel: {
     flex: 1,
+    fontFamily: 'Vazirmatn_400Regular',
     fontSize: 16,
     fontWeight: '500',
     marginRight: 12,
-    textAlign: 'left',
-    fontFamily: 'Vazirmatn_400Regular',
+    textAlign: 'right',
   },
-  signOutButton: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 24,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-  },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Vazirmatn_700Bold',
+  userInfo: {
+    marginTop: 24,
+    paddingHorizontal: 24,
   },
 });

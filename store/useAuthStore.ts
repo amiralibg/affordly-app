@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from '@/lib/api/auth';
+import { authEvents } from '@/lib/authEvents';
 
 export type User = {
   id: string;
@@ -63,7 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           isAuthenticated: true,
           loading: false,
         });
-      } catch (error) {
+      } catch {
         // Token validation failed, try to refresh
         try {
           await authApi.refreshToken(refreshToken);
@@ -74,7 +75,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             isAuthenticated: true,
             loading: false,
           });
-        } catch (refreshError) {
+        } catch {
           // Refresh failed, clear everything
           await AsyncStorage.removeItem('accessToken');
           await AsyncStorage.removeItem('refreshToken');
@@ -87,3 +88,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
+// Listen for auth failures from API client and trigger logout
+authEvents.onAuthFailure(() => {
+  const { signOut } = useAuthStore.getState();
+  void signOut();
+});

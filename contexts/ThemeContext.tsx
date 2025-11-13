@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Design token system - Single source of truth for spacing, typography, and radius
@@ -60,92 +54,193 @@ export const RADIUS = {
   full: 9999,
 } as const;
 
+// Shadow system for depth
+export const SHADOWS = {
+  none: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  small: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  medium: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  large: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  elevated: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  glow: (color: string) => ({
+    shadowColor: color,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  }),
+} as const;
+
 export interface Theme {
   colors: {
+    // Background layers (darkest to lightest)
     background: string;
     backgroundSecondary: string;
     backgroundTertiary: string;
+    backgroundQuaternary: string;
+
+    // Primary color variations (for depth)
     primary: string;
     primaryLight: string;
+    primaryLighter: string;
+    primaryDark: string;
+
+    // Text hierarchy
     text: string;
     textSecondary: string;
     textTertiary: string;
-    border: string;
+
+    // Card/Surface layers
     card: string;
+    cardElevated: string;
+    cardHighlight: string;
     cardBorder: string;
+
+    // Border variations
+    border: string;
+    borderLight: string;
+
+    // Status colors
     success: string;
+    successLight: string;
     warning: string;
+    warningLight: string;
     error: string;
+    errorLight: string;
+
+    // Overlay and glass effects
+    overlay: string;
+    glass: string;
   };
   spacing: typeof SPACING;
   typography: typeof TYPOGRAPHY;
   radius: typeof RADIUS;
+  shadows: typeof SHADOWS;
   isDark: boolean;
 }
 
 const darkTheme: Theme = {
   colors: {
-    // Deep, elegant dark backgrounds with warm undertone
-    background: '#0C0A09', // near-black with subtle brown warmth
-    backgroundSecondary: '#1A1411', // slightly lighter, cozy layer
-    backgroundTertiary: '#2B201B', // warm neutral for surfaces
+    // Background layers (darkest to lightest for depth)
+    background: '#0A0A0A', // deepest dark (base layer)
+    backgroundSecondary: '#141414', // second layer
+    backgroundTertiary: '#1F1F1F', // third layer (cards)
+    backgroundQuaternary: '#2A2A2A', // elevated elements
 
-    // Refined gold primary accents
-    primary: '#E6B422', // elegant muted gold
-    primaryLight: '#F2CC85', // soft highlight gold
+    // Primary gold with depth variations
+    primary: '#D4AF36', // main gold (pure gold color)
+    primaryLight: '#E8C96E', // lighter gold (hover/active)
+    primaryLighter: '#F5E5B8', // lightest gold (highlights)
+    primaryDark: '#B8962D', // darker gold (pressed states)
 
-    // High-contrast text
-    text: '#F9FAFB', // near white
-    textSecondary: '#D1BFA4', // soft warm beige text
-    textTertiary: '#E6B422', // gold accent text
+    // Text hierarchy (lighter = higher importance)
+    text: '#FAFAFA', // pure white (primary text)
+    textSecondary: '#A3A3A3', // neutral gray (secondary)
+    textTertiary: '#737373', // muted gray (tertiary)
 
-    // Borders
-    border: '#3C2E25',
+    // Card/Surface layers (lighter colors = elevated surfaces)
+    card: '#1A1A1A', // base card
+    cardElevated: '#252525', // elevated card
+    cardHighlight: '#2F2F2F', // highlighted/active card
+    cardBorder: '#333333',
 
-    // Cards and overlays
-    card: '#14100E',
-    cardBorder: '#3C2E2555',
+    // Borders (lighter for emphasis)
+    border: '#2A2A2A',
+    borderLight: '#404040',
 
-    // Status colors (unchanged)
+    // Status colors with light variations
     success: '#10B981',
+    successLight: '#10B98126',
     warning: '#F59E0B',
+    warningLight: '#F59E0B26',
     error: '#EF4444',
+    errorLight: '#EF444426',
+
+    // Overlay and glass effects
+    overlay: '#00000080',
+    glass: '#1A1A1ACC',
   },
   spacing: SPACING,
   typography: TYPOGRAPHY,
   radius: RADIUS,
+  shadows: SHADOWS,
   isDark: true,
 };
 
 const lightTheme: Theme = {
   colors: {
-    // Soft neutral backgrounds with warmth
-    background: '#FAFAF9', // clean off-white
-    backgroundSecondary: '#F9F5EC', // soft cream
-    backgroundTertiary: '#F5EAD3', // subtle golden tone
+    // Background layers (darkest to lightest for depth)
+    background: '#F5F5F5', // base gray (deepest layer)
+    backgroundSecondary: '#FAFAFA', // second layer
+    backgroundTertiary: '#FFFFFF', // third layer (cards - lighter on top!)
+    backgroundQuaternary: '#FFFFFF', // elevated elements (pure white)
 
-    // Gold primary colors
-    primary: '#E6B422', // same refined gold as dark mode
-    primaryLight: '#F2CC85',
+    // Primary gold with depth variations
+    primary: '#D4AF36', // main gold (pure gold color)
+    primaryLight: '#E8C96E', // lighter gold (hover/active)
+    primaryLighter: '#F5E5B8', // lightest gold (highlights)
+    primaryDark: '#B8962D', // darker gold (pressed states)
 
-    // Strong text hierarchy
-    text: '#1C1917', // deep neutral brownish-black
-    textSecondary: '#6B5E50', // soft warm gray-brown
-    textTertiary: '#A67C2E', // elegant muted gold text
+    // Text hierarchy (darker = higher importance in light mode)
+    text: '#0A0A0A', // near black (primary text)
+    textSecondary: '#525252', // dark gray (secondary)
+    textTertiary: '#737373', // muted gray (tertiary)
 
-    // Clear borders and surfaces
-    border: '#E4E4E7',
-    card: '#FFFFFF',
-    cardBorder: '#E4E4E7',
+    // Card/Surface layers (lighter = elevated in light mode)
+    card: '#FFFFFF', // base card (lightest)
+    cardElevated: '#FFFFFF', // elevated card
+    cardHighlight: '#FFF8F0', // highlighted/active card (warm tint)
+    cardBorder: '#E5E5E5',
 
-    // Status colors
+    // Borders (darker for definition)
+    border: '#E5E5E5',
+    borderLight: '#F0F0F0',
+
+    // Status colors with light variations
     success: '#10B981',
+    successLight: '#10B98126',
     warning: '#F59E0B',
+    warningLight: '#F59E0B26',
     error: '#EF4444',
+    errorLight: '#EF444426',
+
+    // Overlay and glass effects
+    overlay: '#00000040',
+    glass: '#FFFFFFCC',
   },
   spacing: SPACING,
   typography: TYPOGRAPHY,
   radius: RADIUS,
+  shadows: SHADOWS,
   isDark: false,
 };
 
@@ -163,7 +258,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(true); // Default to dark theme
 
   useEffect(() => {
-    loadTheme();
+    void loadTheme();
   }, []);
 
   const loadTheme = async () => {
@@ -181,10 +276,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const newTheme = !isDark;
       setIsDark(newTheme);
-      await AsyncStorage.setItem(
-        THEME_STORAGE_KEY,
-        newTheme ? 'dark' : 'light'
-      );
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme ? 'dark' : 'light');
     } catch (error) {
       console.error('Failed to save theme:', error);
     }
@@ -193,9 +285,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = isDark ? darkTheme : lightTheme;
 
   return (
-    <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>{children}</ThemeContext.Provider>
   );
 }
 

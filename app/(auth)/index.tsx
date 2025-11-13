@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  I18nManager,
 } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSignIn, useSignUp } from '@/lib/hooks/useAuth';
-import { Wallet, Eye, EyeOff } from 'lucide-react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useTranslation } from 'react-i18next';
-import { useLocalizedFont } from '@/hooks/useLocalizedFont';
 import { showToast } from '@/lib/toast';
+import { TEXT } from '@/constants/text';
+import WalletIcon from '@/components/icons/WalletIcon';
 
 export default function AuthScreen() {
   const [email, setEmail] = useState('');
@@ -33,13 +32,37 @@ export default function AuthScreen() {
   const setUser = useAuthStore((state) => state.setUser);
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const { theme } = useTheme();
-  const { t, i18n } = useTranslation();
-  const fontRegular = useLocalizedFont('regular');
-  const fontBold = useLocalizedFont('bold');
-  const isRTL = i18n.language === 'fa';
 
   const signInMutation = useSignIn();
   const signUpMutation = useSignUp();
+
+  // Memoized styles for dynamic theming
+  const nameInputStyle = useMemo(
+    () => ({
+      backgroundColor: theme.colors.card,
+      color: theme.colors.text,
+      borderColor: errors.name ? '#EF4444' : theme.colors.cardBorder,
+    }),
+    [errors.name, theme.colors.card, theme.colors.text, theme.colors.cardBorder]
+  );
+
+  const emailInputStyle = useMemo(
+    () => ({
+      backgroundColor: theme.colors.card,
+      color: theme.colors.text,
+      borderColor: errors.email ? '#EF4444' : theme.colors.cardBorder,
+    }),
+    [errors.email, theme.colors.card, theme.colors.text, theme.colors.cardBorder]
+  );
+
+  const passwordInputStyle = useMemo(
+    () => ({
+      backgroundColor: theme.colors.card,
+      color: theme.colors.text,
+      borderColor: errors.password ? '#EF4444' : theme.colors.cardBorder,
+    }),
+    [errors.password, theme.colors.card, theme.colors.text, theme.colors.cardBorder]
+  );
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,9 +96,9 @@ export default function AuthScreen() {
     // Check if there are any errors
     if (newErrors.email || newErrors.password || newErrors.name) {
       if (!email || !password || (isSignUp && !name)) {
-        showToast.error(t('common.error'), t('auth.fillAllFields'));
+        showToast.error(TEXT.common.error, TEXT.auth.fillAllFields);
       } else if (newErrors.email) {
-        showToast.error(t('common.error'), t('auth.invalidEmail'));
+        showToast.error(TEXT.common.error, TEXT.auth.invalidEmail);
       }
       return;
     }
@@ -90,9 +113,11 @@ export default function AuthScreen() {
         setUser(result.user);
         setAuthenticated(true);
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'An error occurred';
-      showToast.error(t('common.error'), errorMessage);
+    } catch (error: unknown) {
+      const errorMessage =
+        (error as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'خطایی رخ داد';
+      showToast.error(TEXT.common.error, errorMessage);
     }
   };
 
@@ -103,33 +128,33 @@ export default function AuthScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: theme.colors.backgroundSecondary }]}>
-            <Wallet size={48} color={theme.colors.primary} strokeWidth={2} />
+          <View
+            style={[styles.iconContainer, { backgroundColor: theme.colors.backgroundSecondary }]}
+          >
+            <WalletIcon size={48} color={theme.colors.primary} />
           </View>
-          <Text style={[styles.title, fontBold, { color: theme.colors.text }]}>{t('auth.appName')}</Text>
-          <Text style={[styles.subtitle, fontRegular, { color: theme.colors.textSecondary }]}>
-            {t('auth.appTagline')}
+          <Text
+            style={[styles.title, { color: theme.colors.text, fontFamily: 'Vazirmatn_700Bold' }]}
+          >
+            {TEXT.auth.appName}
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: theme.colors.textSecondary, fontFamily: 'Vazirmatn_400Regular' },
+            ]}
+          >
+            {TEXT.auth.appTagline}
           </Text>
         </View>
 
         <View style={styles.form}>
           {isSignUp && (
             <TextInput
-              style={[
-                styles.input,
-                fontRegular,
-                {
-                  backgroundColor: theme.colors.card,
-                  color: theme.colors.text,
-                  borderColor: errors.name ? '#EF4444' : theme.colors.cardBorder,
-                }
-              ]}
-              placeholder={t('auth.name')}
+              style={[styles.input, nameInputStyle, { fontFamily: 'Vazirmatn_400Regular' }]}
+              placeholder={TEXT.auth.name}
               value={name}
               onChangeText={(text) => {
                 setName(text);
@@ -143,16 +168,8 @@ export default function AuthScreen() {
           )}
 
           <TextInput
-            style={[
-              styles.input,
-              fontRegular,
-              {
-                backgroundColor: theme.colors.card,
-                color: theme.colors.text,
-                borderColor: errors.email ? '#EF4444' : theme.colors.cardBorder,
-              }
-            ]}
-            placeholder={t('auth.email')}
+            style={[styles.input, emailInputStyle, { fontFamily: 'Vazirmatn_400Regular' }]}
+            placeholder={TEXT.auth.email}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -169,17 +186,10 @@ export default function AuthScreen() {
             <TextInput
               style={[
                 styles.passwordInput,
-                fontRegular,
-                {
-                  backgroundColor: theme.colors.card,
-                  color: theme.colors.text,
-                  borderColor: errors.password ? '#EF4444' : theme.colors.cardBorder,
-                  paddingLeft: isRTL ? 16 :  50,
-                  paddingRight: isRTL ? 50  : 16,
-                  textAlign: isRTL ? 'right' : 'left',
-                }
+                passwordInputStyle,
+                { fontFamily: 'Vazirmatn_400Regular' },
               ]}
-              placeholder={t('auth.password')}
+              placeholder={TEXT.auth.password}
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
@@ -190,10 +200,7 @@ export default function AuthScreen() {
               secureTextEntry={!showPassword}
               placeholderTextColor={theme.colors.textTertiary}
             />
-            <TouchableOpacity
-              style={[styles.eyeIcon, isRTL ? styles.eyeIconRight : styles.eyeIconLeft]}
-              onPress={() => setShowPassword(!showPassword)}
-            >
+            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
               {showPassword ? (
                 <EyeOff size={20} color={theme.colors.textSecondary} strokeWidth={2} />
               ) : (
@@ -203,23 +210,32 @@ export default function AuthScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.colors.primary }, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              { backgroundColor: theme.colors.primary },
+              loading && styles.buttonDisabled,
+            ]}
             onPress={handleAuth}
             disabled={loading}
           >
-            <Text style={[styles.buttonText, fontBold, { color: theme.colors.background }]}>
-              {loading ? t('common.loading') : isSignUp ? t('auth.signUp') : t('auth.signIn')}
+            <Text
+              style={[
+                styles.buttonText,
+                { color: theme.colors.background, fontFamily: 'Vazirmatn_700Bold' },
+              ]}
+            >
+              {loading ? TEXT.common.loading : isSignUp ? TEXT.auth.signUp : TEXT.auth.signIn}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => setIsSignUp(!isSignUp)}
-          >
-            <Text style={[styles.switchButtonText, fontRegular, { color: theme.colors.primary }]}>
-              {isSignUp
-                ? t('auth.alreadyHaveAccount')
-                : t('auth.noAccount')}
+          <TouchableOpacity style={styles.switchButton} onPress={() => setIsSignUp(!isSignUp)}>
+            <Text
+              style={[
+                styles.switchButtonText,
+                { color: theme.colors.primary, fontFamily: 'Vazirmatn_400Regular' },
+              ]}
+            >
+              {isSignUp ? TEXT.auth.alreadyHaveAccount : TEXT.auth.noAccount}
             </Text>
           </TouchableOpacity>
         </View>
@@ -229,71 +245,11 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  form: {
-    width: '100%',
-  },
-  input: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    fontSize: 16,
-    borderWidth: 1,
-  },
-  passwordContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  passwordInput: {
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    top: 16,
-    padding: 4,
-  },
-  eyeIconRight: {
-    right: 16,
-  },
-  eyeIconLeft: {
-    left: 16,
-  },
   button: {
-    borderRadius: 12,
-    padding: 16,
     alignItems: 'center',
+    borderRadius: 12,
     marginTop: 8,
+    padding: 16,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -301,11 +257,68 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
   },
-  switchButton: {
-    marginTop: 24,
+  container: {
+    flex: 1,
+  },
+  eyeIcon: {
+    left: 16,
+    padding: 4,
+    position: 'absolute',
+    top: 16,
+  },
+  form: {
+    width: '100%',
+  },
+  header: {
     alignItems: 'center',
+    marginBottom: 48,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    borderRadius: 48,
+    height: 96,
+    justifyContent: 'center',
+    marginBottom: 24,
+    width: 96,
+  },
+  input: {
+    borderRadius: 12,
+    borderWidth: 1,
+    fontSize: 16,
+    marginBottom: 16,
+    padding: 16,
+    textAlign: 'right',
+  },
+  passwordContainer: {
+    marginBottom: 16,
+    position: 'relative',
+  },
+  passwordInput: {
+    borderRadius: 12,
+    borderWidth: 1,
+    fontSize: 16,
+    padding: 16,
+    textAlign: 'right',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  subtitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  switchButton: {
+    alignItems: 'center',
+    marginTop: 24,
   },
   switchButtonText: {
     fontSize: 14,
+  },
+  title: {
+    fontSize: 32,
+    marginBottom: 8,
   },
 });

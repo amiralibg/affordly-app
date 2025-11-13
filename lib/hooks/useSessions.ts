@@ -14,7 +14,7 @@ export const useRevokeSession = () => {
   return useMutation({
     mutationFn: (sessionId: string) => authApi.revokeSession(sessionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      void queryClient.invalidateQueries({ queryKey: ['sessions'] });
     },
   });
 };
