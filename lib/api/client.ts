@@ -5,7 +5,7 @@ import { authEvents } from '../authEvents';
 
 const getApiUrl = () => {
   if (!__DEV__) {
-    return 'https://goldify-api.amiralibg.xyz/api';
+    return 'https://ganjino-api.amiralibg.xyz/api';
   }
 
   // Development URLs based on platform

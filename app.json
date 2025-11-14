@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Goldify",
-    "slug": "goldify",
+    "name": "Ganjino",
+    "slug": "ganjino",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/splash-icon-light.png",
-    "scheme": "goldify",
+    "scheme": "ganjino",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -21,7 +21,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.amiralibgi.goldify",
+      "bundleIdentifier": "com.amiralibgi.ganjino",
       "icon": {
         "dark": "./assets/icons/ios-dark.png",
         "light": "./assets/icons/ios-light.png",
@@ -52,7 +52,7 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "com.amiralibgi.goldify",
+      "package": "com.amiralibgi.ganjino",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "monochromeImage": "./assets/icons/adaptive-icon.png",
