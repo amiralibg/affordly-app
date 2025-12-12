@@ -113,6 +113,11 @@ export interface Theme {
     primaryLight: string;
     primaryLighter: string;
     primaryDark: string;
+    
+    // Gradients (Start/End)
+    primaryGradient: [string, string];
+    cardGradient: [string, string];
+    cardGradientHighlight: [string, string];
 
     // Text hierarchy
     text: string;
@@ -140,6 +145,7 @@ export interface Theme {
     // Overlay and glass effects
     overlay: string;
     glass: string;
+    glassBorder: string;
   };
   spacing: typeof SPACING;
   typography: typeof TYPOGRAPHY;
@@ -151,43 +157,49 @@ export interface Theme {
 const darkTheme: Theme = {
   colors: {
     // Background layers (darkest to lightest for depth)
-    background: '#0A0A0A', // deepest dark (base layer)
-    backgroundSecondary: '#141414', // second layer
-    backgroundTertiary: '#1F1F1F', // third layer (cards)
-    backgroundQuaternary: '#2A2A2A', // elevated elements
+    background: '#050505', // Deep absolute black/gray
+    backgroundSecondary: '#0F0F0F', // Slightly lighter
+    backgroundTertiary: '#181818', // More definition
+    backgroundQuaternary: '#222222', // Elements
 
     // Primary gold with depth variations
-    primary: '#D4AF36', // main gold (pure gold color)
-    primaryLight: '#E8C96E', // lighter gold (hover/active)
-    primaryLighter: '#F5E5B8', // lightest gold (highlights)
-    primaryDark: '#B8962D', // darker gold (pressed states)
+    primary: '#D4AF37', // Metallic Gold
+    primaryLight: '#F3D060', // Lighter Gold
+    primaryLighter: '#FAE596', // Pale Gold
+    primaryDark: '#AA8C2C', // Darkened Gold
+    
+    // Gradients
+    primaryGradient: ['#D4AF37', '#F3D060'], // Rich Gold Gradient
+    cardGradient: ['#1A1A1A', '#121212'], // Subtle Card Gradient
+    cardGradientHighlight: ['#252525', '#1A1A1A'], // Active Card Gradient
 
     // Text hierarchy (lighter = higher importance)
-    text: '#FAFAFA', // pure white (primary text)
-    textSecondary: '#A3A3A3', // neutral gray (secondary)
-    textTertiary: '#737373', // muted gray (tertiary)
+    text: '#FFFFFF', // Pure White
+    textSecondary: '#CCCCCC', // Light Gray
+    textTertiary: '#888888', // Muted Gray
 
     // Card/Surface layers (lighter colors = elevated surfaces)
-    card: '#1A1A1A', // base card
-    cardElevated: '#252525', // elevated card
-    cardHighlight: '#2F2F2F', // highlighted/active card
-    cardBorder: '#333333',
+    card: '#141414', // Base dark card
+    cardElevated: '#1E1E1E', // Elevated card
+    cardHighlight: '#2A2A2A', // Highlight state
+    cardBorder: '#333333', // Subtle border
 
     // Borders (lighter for emphasis)
     border: '#2A2A2A',
-    borderLight: '#404040',
+    borderLight: '#444444',
 
     // Status colors with light variations
     success: '#10B981',
-    successLight: '#10B98126',
+    successLight: 'rgba(16, 185, 129, 0.15)',
     warning: '#F59E0B',
-    warningLight: '#F59E0B26',
+    warningLight: 'rgba(245, 158, 11, 0.15)',
     error: '#EF4444',
-    errorLight: '#EF444426',
+    errorLight: 'rgba(239, 68, 68, 0.15)',
 
     // Overlay and glass effects
-    overlay: '#00000080',
-    glass: '#1A1A1ACC',
+    overlay: 'rgba(0, 0, 0, 0.85)',
+    glass: 'rgba(26, 26, 26, 0.65)',
+    glassBorder: 'rgba(255, 255, 255, 0.08)',
   },
   spacing: SPACING,
   typography: TYPOGRAPHY,
@@ -199,43 +211,49 @@ const darkTheme: Theme = {
 const lightTheme: Theme = {
   colors: {
     // Background layers (darkest to lightest for depth)
-    background: '#F5F5F5', // base gray (deepest layer)
-    backgroundSecondary: '#FAFAFA', // second layer
-    backgroundTertiary: '#FFFFFF', // third layer (cards - lighter on top!)
-    backgroundQuaternary: '#FFFFFF', // elevated elements (pure white)
+    background: '#F8F9FA', // Cool gray white
+    backgroundSecondary: '#FFFFFF', // Pure white
+    backgroundTertiary: '#F0F2F5', // Off-white
+    backgroundQuaternary: '#E9ECEF', // Subtle gray
 
     // Primary gold with depth variations
-    primary: '#D4AF36', // main gold (pure gold color)
-    primaryLight: '#E8C96E', // lighter gold (hover/active)
-    primaryLighter: '#F5E5B8', // lightest gold (highlights)
-    primaryDark: '#B8962D', // darker gold (pressed states)
+    primary: '#D4AF37', // Metallic Gold
+    primaryLight: '#E6C24A', // Lighter Gold
+    primaryLighter: '#FBE8A6', // Pale Gold
+    primaryDark: '#B8962D', // Dark Gold
+    
+    // Gradients
+    primaryGradient: ['#D4AF37', '#E6C24A'],
+    cardGradient: ['#FFFFFF', '#F8F9FA'],
+    cardGradientHighlight: ['#FFFBF0', '#FFFDF5'],
 
     // Text hierarchy (darker = higher importance in light mode)
-    text: '#0A0A0A', // near black (primary text)
-    textSecondary: '#525252', // dark gray (secondary)
-    textTertiary: '#737373', // muted gray (tertiary)
+    text: '#111111', // Almost Black
+    textSecondary: '#555555', // Medium Gray
+    textTertiary: '#888888', // Light Gray
 
     // Card/Surface layers (lighter = elevated in light mode)
-    card: '#FFFFFF', // base card (lightest)
-    cardElevated: '#FFFFFF', // elevated card
-    cardHighlight: '#FFF8F0', // highlighted/active card (warm tint)
-    cardBorder: '#E5E5E5',
+    card: '#FFFFFF', // White card
+    cardElevated: '#FFFFFF', // Elevated white card
+    cardHighlight: '#FEFCF5', // Warm tint for highlight
+    cardBorder: '#EDEEF0',
 
     // Borders (darker for definition)
-    border: '#E5E5E5',
-    borderLight: '#F0F0F0',
+    border: '#E2E4E8',
+    borderLight: '#EEEFF2',
 
     // Status colors with light variations
-    success: '#10B981',
-    successLight: '#10B98126',
-    warning: '#F59E0B',
-    warningLight: '#F59E0B26',
-    error: '#EF4444',
-    errorLight: '#EF444426',
+    success: '#059669',
+    successLight: 'rgba(5, 150, 105, 0.1)',
+    warning: '#D97706',
+    warningLight: 'rgba(217, 119, 6, 0.1)',
+    error: '#DC2626',
+    errorLight: 'rgba(220, 38, 38, 0.1)',
 
     // Overlay and glass effects
-    overlay: '#00000040',
-    glass: '#FFFFFFCC',
+    overlay: 'rgba(0, 0, 0, 0.4)',
+    glass: 'rgba(255, 255, 255, 0.75)',
+    glassBorder: 'rgba(255, 255, 255, 0.5)',
   },
   spacing: SPACING,
   typography: TYPOGRAPHY,

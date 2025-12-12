@@ -45,14 +45,28 @@ export interface GoldWeightFormatted {
 
 export function formatGoldWeight(grams: number): GoldWeightFormatted {
   const soot = gramsToSoot(grams);
+  
+  if (grams < 1) {
+    return {
+      primary: {
+        value: soot,
+        unit: 'سوت',
+      },
+      secondary: {
+        value: grams,
+        unit: 'گرم',
+      },
+    };
+  }
+
   return {
     primary: {
-      value: soot,
-      unit: 'سوت',
+      value: grams,
+      unit: 'گرم',
     },
     secondary: {
-      value: grams,
-      unit: 'گرم طلای ۱۸ عیار',
+      value: soot,
+      unit: 'سوت',
     },
   };
 }

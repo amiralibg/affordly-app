@@ -1,11 +1,12 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { User, ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { TEXT } from '@/constants/text';
+import { BlurView } from 'expo-blur';
 
 export default function AppHeader() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -15,6 +16,11 @@ export default function AppHeader() {
       return {
         title: TEXT.wishlist.title,
         subtitle: TEXT.wishlist.subtitle,
+      };
+    } else if (pathname === '/savings') {
+      return {
+        title: TEXT.history.title,
+        subtitle: TEXT.history.subtitle,
       };
     } else if (pathname === '/history') {
       return {
@@ -39,44 +45,21 @@ export default function AppHeader() {
   const isProfileScreen = pathname === '/profile';
 
   return (
-    <View
-      style={[
-        styles.header,
-        {
-          backgroundColor: theme.colors.backgroundSecondary,
-        },
-        theme.shadows.small,
-      ]}
-    >
-      <View style={styles.headerContent}>
+    <View style={styles.container}>
+      <BlurView
+        intensity={isDark ? 50 : 80}
+        tint={isDark ? 'dark' : 'light'}
+        style={[
+          styles.headerContent,
+          {
+            backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)',
+            borderColor: theme.colors.glassBorder,
+            borderBottomWidth: 1,
+          },
+        ]}
+      >
         <View style={styles.titleContainer}>
-          {isProfileScreen && (
-            <TouchableOpacity
-              style={[
-                styles.backButton,
-                {
-                  backgroundColor: theme.colors.primary + '15',
-                },
-              ]}
-              onPress={() => router.back()}
-            >
-              <ChevronLeft size={24} color={theme.colors.primary} strokeWidth={2.5} />
-            </TouchableOpacity>
-          )}
-          {!isProfileScreen && (
-            <TouchableOpacity
-              style={[
-                styles.profileButton,
-                {
-                  backgroundColor: theme.colors.primary + '15',
-                },
-              ]}
-              onPress={() => router.push('/profile')}
-            >
-              <User size={22} color={theme.colors.primary} strokeWidth={2.5} />
-            </TouchableOpacity>
-          )}
-          <Text style={[styles.title, styles.fontBold, { color: theme.colors.text }]}>
+           <Text style={[styles.title, styles.fontBold, { color: theme.colors.text }]}>
             {screenInfo.title}
           </Text>
           {screenInfo.subtitle && (
@@ -87,19 +70,48 @@ export default function AppHeader() {
             </Text>
           )}
         </View>
-      </View>
+
+        <View style={styles.actionContainer}>
+          {isProfileScreen && (
+            <TouchableOpacity
+              style={[
+                styles.iconButton,
+                {
+                  backgroundColor: theme.colors.backgroundQuaternary,
+                },
+              ]}
+              onPress={() => router.back()}
+            >
+              <ChevronLeft size={24} color={theme.colors.text} strokeWidth={2} />
+            </TouchableOpacity>
+          )}
+          {!isProfileScreen && (
+            <TouchableOpacity
+              style={[
+                styles.iconButton,
+                {
+                  backgroundColor: theme.colors.backgroundQuaternary,
+                },
+              ]}
+              onPress={() => router.push('/profile')}
+            >
+              <User size={22} color={theme.colors.text} strokeWidth={2} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </BlurView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backButton: {
-    alignItems: 'center',
-    borderRadius: 24,
-    height: 48,
+  actionContainer: {
     justifyContent: 'center',
-    marginRight: 12,
-    width: 48,
+    paddingLeft: 16,
+  },
+  container: {
+    overflow: 'hidden',
+    zIndex: 100,
   },
   fontBold: {
     fontFamily: 'Vazirmatn_700Bold',
@@ -107,35 +119,31 @@ const styles = StyleSheet.create({
   fontRegular: {
     fontFamily: 'Vazirmatn_400Regular',
   },
-  header: {
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    paddingTop: 64,
-  },
   headerContent: {
     alignItems: 'center',
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // Persian layout
     justifyContent: 'space-between',
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
-  profileButton: {
+  iconButton: {
     alignItems: 'center',
-    borderRadius: 24,
-    height: 48,
+    borderRadius: 20,
+    height: 44,
     justifyContent: 'center',
-    width: 48,
+    width: 44,
   },
   subtitle: {
-    fontSize: 16,
-    marginTop: 4,
+    fontSize: 14,
+    marginTop: 2,
     textAlign: 'right',
   },
   title: {
-    fontSize: 34,
-    marginBottom: 4,
+    fontSize: 24,
     textAlign: 'right',
   },
   titleContainer: {
     flex: 1,
-    marginRight: 16,
   },
 });

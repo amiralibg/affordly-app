@@ -1,15 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Switch,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, Switch, ActivityIndicator } from 'react-native';
 import type { TextStyle, ViewStyle } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LogOut, Moon, Sun, Wallet, TrendingUp } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -20,6 +12,7 @@ import GlassInput from '@/components/ui/GlassInput';
 import DepthButton from '@/components/ui/DepthButton';
 import StatCard from '@/components/ui/StatCard';
 import AppHeader from '@/components/AppHeader';
+import { LinearGradient } from 'expo-linear-gradient';
 import { TEXT, formatNumber } from '@/constants/text';
 import { persianToEnglish, englishToPersian } from '@/utils/numbers';
 
@@ -191,133 +184,135 @@ export default function ProfileScreen() {
     salaryNum > 0 && percentageNum > 0 ? (salaryNum * percentageNum) / 100 : 0;
 
   return (
-    <View style={[styles.screen, containerStyle]}>
+    <View style={styles.screen}>
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.backgroundSecondary]}
+        style={StyleSheet.absoluteFillObject}
+      />
       <AppHeader />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-        style={styles.keyboardAvoiding}
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={20}
+        extraHeight={80}
       >
-        <ScrollView
-          style={styles.container}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.userInfo}>
-            <Text style={[styles.email, emailStyle]}>{user?.email || 'user@example.com'}</Text>
-          </View>
+        <View style={styles.userInfo}>
+          <Text style={[styles.email, emailStyle]}>{user?.email || 'user@example.com'}</Text>
+        </View>
 
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, titleStyle]}>{TEXT.profile.financialSettings}</Text>
-            <Text style={[styles.sectionDescription, sectionDescriptionStyle]}>
-              {TEXT.profile.financialDescription}
-            </Text>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, titleStyle]}>{TEXT.profile.financialSettings}</Text>
+          <Text style={[styles.sectionDescription, sectionDescriptionStyle]}>
+            {TEXT.profile.financialDescription}
+          </Text>
 
-            <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.inputLabel,
-                  {
-                    color: theme.colors.text,
-                    marginBottom: theme.spacing.sm,
-                  },
-                ]}
-              >
-                {TEXT.profile.monthlySalary}
-              </Text>
-              <GlassInput
-                icon={<Wallet size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />}
-                placeholder="0"
-                value={monthlySalary}
-                onChangeText={handleSalaryChange}
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.inputLabel,
-                  {
-                    color: theme.colors.text,
-                    marginBottom: theme.spacing.sm,
-                  },
-                ]}
-              >
-                {TEXT.profile.savingsPercentage}
-              </Text>
-              <GlassInput
-                icon={<TrendingUp size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />}
-                placeholder="20"
-                value={savingsPercentage}
-                onChangeText={handlePercentageChange}
-                keyboardType="numeric"
-              />
-            </View>
-
-            {monthlySavingsAmount > 0 && (
-              <StatCard
-                icon={<TrendingUp size={32} color={theme.colors.primary} strokeWidth={2.5} />}
-                label={TEXT.profile.saveFinancials}
-                value={`${formatNumber(monthlySavingsAmount)} تومان`}
-                variant="primary"
-                style={{ marginBottom: theme.spacing.md }}
-              />
-            )}
-
-            <DepthButton
-              onPress={handleSaveFinancials}
-              disabled={isSaving}
-              loading={isSaving}
-              variant="primary"
-              size="large"
+          <View style={styles.inputGroup}>
+            <Text
+              style={[
+                styles.inputLabel,
+                {
+                  color: theme.colors.text,
+                  marginBottom: theme.spacing.sm,
+                },
+              ]}
             >
-              {TEXT.profile.saveFinancials}
-            </DepthButton>
+              {TEXT.profile.monthlySalary}
+            </Text>
+            <GlassInput
+              icon={<Wallet size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />}
+              placeholder="0"
+              value={monthlySalary}
+              onChangeText={handleSalaryChange}
+              keyboardType="numeric"
+            />
           </View>
 
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-              {TEXT.profile.theme}
+          <View style={styles.inputGroup}>
+            <Text
+              style={[
+                styles.inputLabel,
+                {
+                  color: theme.colors.text,
+                  marginBottom: theme.spacing.sm,
+                },
+              ]}
+            >
+              {TEXT.profile.savingsPercentage}
             </Text>
-            <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
-              {TEXT.profile.themeDescription}
-            </Text>
-
-            <ElevatedCard elevation="elevated" shadowLevel="small">
-              <View style={cardRowStyle}>
-                {isDark ? (
-                  <Moon size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
-                ) : (
-                  <Sun size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
-                )}
-                <Text style={[styles.themeLabel, themeLabelDynamicStyle]}>
-                  {isDark ? TEXT.profile.darkMode : TEXT.profile.lightMode}
-                </Text>
-                <Switch
-                  value={isDark}
-                  onValueChange={toggleTheme}
-                  trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
-                  thumbColor={isDark ? theme.colors.primary : '#f4f3f4'}
-                />
-              </View>
-            </ElevatedCard>
+            <GlassInput
+              icon={<TrendingUp size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />}
+              placeholder="20"
+              value={savingsPercentage}
+              onChangeText={handlePercentageChange}
+              keyboardType="numeric"
+            />
           </View>
+
+          {monthlySavingsAmount > 0 && (
+            <StatCard
+              icon={<TrendingUp size={32} color={theme.colors.primary} strokeWidth={2.5} />}
+              label={TEXT.profile.saveFinancials}
+              value={`${formatNumber(monthlySavingsAmount)} تومان`}
+              variant="primary"
+              style={{ marginBottom: theme.spacing.md }}
+            />
+          )}
 
           <DepthButton
-            onPress={handleSignOut}
+            onPress={handleSaveFinancials}
+            disabled={isSaving}
+            loading={isSaving}
             variant="primary"
             size="large"
-            style={signOutButtonStyle}
-            textStyle={signOutTextStyle}
-            icon={<LogOut size={20} color={theme.colors.background} strokeWidth={2.5} />}
-            iconPosition="right"
           >
-            {TEXT.profile.signOut}
+            {TEXT.profile.saveFinancials}
           </DepthButton>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            {TEXT.profile.theme}
+          </Text>
+          <Text style={[styles.sectionDescription, { color: theme.colors.textSecondary }]}>
+            {TEXT.profile.themeDescription}
+          </Text>
+
+          <ElevatedCard elevation="elevated" shadowLevel="small">
+            <View style={cardRowStyle}>
+              {isDark ? (
+                <Moon size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
+              ) : (
+                <Sun size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
+              )}
+              <Text style={[styles.themeLabel, themeLabelDynamicStyle]}>
+                {isDark ? TEXT.profile.darkMode : TEXT.profile.lightMode}
+              </Text>
+              <Switch
+                value={isDark}
+                onValueChange={toggleTheme}
+                trackColor={{ false: theme.colors.border, true: theme.colors.primaryLight }}
+                thumbColor={isDark ? theme.colors.primary : '#f4f3f4'}
+              />
+            </View>
+          </ElevatedCard>
+        </View>
+
+        <DepthButton
+          onPress={handleSignOut}
+          variant="primary"
+          size="large"
+          style={signOutButtonStyle}
+          textStyle={signOutTextStyle}
+          icon={<LogOut size={20} color={theme.colors.background} strokeWidth={2.5} />}
+          iconPosition="right"
+        >
+          {TEXT.profile.signOut}
+        </DepthButton>
+      </KeyboardAwareScrollView>
     </View>
   );
 }
@@ -342,9 +337,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
     textAlign: 'right',
-  },
-  keyboardAvoiding: {
-    flex: 1,
   },
   screen: {
     flex: 1,

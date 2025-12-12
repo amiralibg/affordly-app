@@ -5,7 +5,7 @@ export interface SavingsLog {
   userId: string;
   amount: number;
   type: 'money' | 'gold';
-  productId?: {
+  goalId?: {
     _id: string;
     name: string;
     price: number;
@@ -20,7 +20,7 @@ export interface SavingsLog {
 export interface CreateSavingsLogData {
   amount: number;
   type?: 'money' | 'gold';
-  productId?: string;
+  goalId?: string;
   note?: string;
   date?: string;
 }
@@ -29,7 +29,7 @@ export interface GetSavingsLogsParams {
   startDate?: string;
   endDate?: string;
   type?: 'money' | 'gold';
-  productId?: string;
+  goalId?: string;
   limit?: number;
 }
 

@@ -1,36 +1,32 @@
 import { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useProducts, useUpdateProduct, useDeleteProduct } from '@/lib/hooks/useProducts';
-import { Heart, Coins, X } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Modal } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useGoals, useUpdateGoal, useDeleteGoal } from '@/lib/hooks/useGoals';
+import { use18KGoldPrice } from '@/lib/hooks/useGold';
+import { Heart, Coins, X, Plus } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { showToast } from '@/lib/toast';
-import { TEXT, formatNumber } from '@/constants/text';
+import { TEXT, formatNumber, formatDecimal } from '@/constants/text';
 import { formatGoldWeight } from '@/lib/utils/goldUnits';
 import { persianToEnglish, englishToPersian } from '@/utils/numbers';
-import type { SavingsTimeline } from '@/lib/api/products';
+import type { SavingsTimeline } from '@/lib/api/goals';
 import WishlistCard from '@/components/ui/WishlistCard';
 import GlassInput from '@/components/ui/GlassInput';
 import DepthButton from '@/components/ui/DepthButton';
 import AppHeader from '@/components/AppHeader';
+import AddGoalModal from '@/components/AddGoalModal';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WishlistScreen() {
-  const { data: products = [], isLoading } = useProducts();
-  const updateProduct = useUpdateProduct();
-  const deleteProduct = useDeleteProduct();
+  const { data: goals = [], isLoading } = useGoals();
+  const { data: goldPrice } = use18KGoldPrice();
+  const updateGoal = useUpdateGoal();
+  const deleteGoal = useDeleteGoal();
   const { theme } = useTheme();
 
-  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [goldAmount, setGoldAmount] = useState('');
+  const [addModalVisible, setAddModalVisible] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     id: string;
     name: string;
@@ -40,7 +36,7 @@ export default function WishlistScreen() {
   const deleteButtonBackgroundStyle = useMemo(() => ({ backgroundColor: '#DC2626' }), []);
   const deleteButtonTextStyle = useMemo(() => ({ color: '#FFFFFF' }), []);
 
-  const wishlistItems = products.filter((p) => p.isWishlisted);
+  const wishlistItems = goals.filter((g) => g.isWishlisted);
 
   const calculateProgress = (saved: number, total: number) => {
     return Math.min((saved / total) * 100, 100);
@@ -85,7 +81,7 @@ export default function WishlistScreen() {
     setGoldAmount(final ? englishToPersian(final) : '');
   };
 
-  const handleAddGold = async (productId: string, currentAmount: number) => {
+  const handleAddGold = async (goalId: string, currentAmount: number) => {
     // Convert Persian to English before parsing
     const addAmount = parseFloat(persianToEnglish(goldAmount));
 
@@ -97,12 +93,12 @@ export default function WishlistScreen() {
     const newAmount = currentAmount + addAmount;
 
     try {
-      await updateProduct.mutateAsync({
-        id: productId,
+      await updateGoal.mutateAsync({
+        id: goalId,
         data: { savedGoldAmount: newAmount },
       });
       showToast.success(TEXT.common.success, TEXT.wishlist.goldUpdated);
-      setEditingProductId(null);
+      setEditingGoalId(null);
       setGoldAmount('');
     } catch (error: unknown) {
       const errorMessage =
@@ -112,15 +108,15 @@ export default function WishlistScreen() {
     }
   };
 
-  const handleDeleteItem = (productId: string, productName: string) => {
-    setDeleteConfirm({ id: productId, name: productName });
+  const handleDeleteItem = (goalId: string, goalName: string) => {
+    setDeleteConfirm({ id: goalId, name: goalName });
   };
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
 
     try {
-      await deleteProduct.mutateAsync(deleteConfirm.id);
+      await deleteGoal.mutateAsync(deleteConfirm.id);
       showToast.success(TEXT.common.success, TEXT.common.delete);
       setDeleteConfirm(null);
     } catch (error: unknown) {
@@ -132,15 +128,35 @@ export default function WishlistScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.backgroundSecondary]}
+        style={StyleSheet.absoluteFillObject}
+      />
       <AppHeader />
 
-      <ScrollView
+      <KeyboardAwareScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         // eslint-disable-next-line react-native/no-inline-styles
         contentContainerStyle={{ paddingBottom: 160 }}
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={20}
       >
+        {/* Add New Goal Button */}
+        <DepthButton
+          onPress={() => setAddModalVisible(true)}
+          variant="primary"
+          size="large"
+          // eslint-disable-next-line react-native/no-inline-styles
+          style={{ marginBottom: 20 }}
+          icon={<Plus size={20} color={theme.isDark ? '#0A0A0A' : '#FFFFFF'} strokeWidth={2.5} />}
+          iconPosition="left"
+        >
+          {TEXT.wishlist.addNewGoal}
+        </DepthButton>
+
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -163,37 +179,47 @@ export default function WishlistScreen() {
             const savedGoldFormatted = formatGoldWeight(item.savedGoldAmount);
             const remainingFormatted = formatGoldWeight(remaining);
 
+            // Use current price if available, otherwise fallback to creation price
+            const displayPrice = item.currentPriceInToman ?? item.price;
+            const priceLabel = item.currentPriceInToman
+              ? `${formatNumber(displayPrice)} ${TEXT.wishlist.toman} (قیمت امروز)`
+              : `${formatNumber(displayPrice)} ${TEXT.wishlist.toman}`;
+
             return (
               <WishlistCard
                 key={item._id}
-                productName={item.name}
-                price={`${formatNumber(item.price)} ${TEXT.wishlist.toman}`}
-                goldEquivalent={`${formatNumber(goldEquivalentFormatted.primary.value)} ${goldEquivalentFormatted.primary.unit}`}
-                savedGold={`${formatNumber(savedGoldFormatted.primary.value)} ${savedGoldFormatted.primary.unit}`}
-                remaining={`${formatNumber(remainingFormatted.primary.value)} ${remainingFormatted.primary.unit}`}
+                goalName={item.name}
+                price={priceLabel}
+                goldEquivalent={`${formatDecimal(goldEquivalentFormatted.primary.value)} ${goldEquivalentFormatted.primary.unit}`}
+                savedGold={`${formatDecimal(savedGoldFormatted.primary.value)} ${savedGoldFormatted.primary.unit}`}
+                remaining={`${formatDecimal(remainingFormatted.primary.value)} ${remainingFormatted.primary.unit}`}
                 progress={progress}
                 timeline={formatTimeline(item.timeline)}
                 onAddGold={() => {
-                  setEditingProductId(item._id);
+                  setEditingGoalId(item._id);
                   setGoldAmount('');
                 }}
                 onDelete={() => handleDeleteItem(item._id, item.name)}
                 goalReached={progress >= 100}
+                savedAmountInToman={item.savedAmountInToman}
+                remainingInToman={item.remainingInToman}
               />
             );
           })
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <Modal
-        visible={editingProductId !== null}
+        visible={editingGoalId !== null}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setEditingProductId(null)}
+        onRequestClose={() => setEditingGoalId(null)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAwareScrollView
           style={styles.modalOverlay}
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
+          extraScrollHeight={20}
         >
           <View
             style={[
@@ -220,7 +246,7 @@ export default function WishlistScreen() {
               <Text style={[styles.modalTitle, styles.fontBold, { color: theme.colors.text }]}>
                 {TEXT.wishlist.addGold}
               </Text>
-              <TouchableOpacity onPress={() => setEditingProductId(null)}>
+              <TouchableOpacity onPress={() => setEditingGoalId(null)}>
                 <X size={24} color={theme.colors.textSecondary} strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
@@ -253,9 +279,9 @@ export default function WishlistScreen() {
 
               <DepthButton
                 onPress={() => {
-                  const product = products.find((p) => p._id === editingProductId);
-                  if (product) {
-                    void handleAddGold(editingProductId!, product.savedGoldAmount);
+                  const goal = goals.find((g) => g._id === editingGoalId);
+                  if (goal) {
+                    void handleAddGold(editingGoalId!, goal.savedGoldAmount);
                   }
                 }}
                 variant="primary"
@@ -265,7 +291,7 @@ export default function WishlistScreen() {
               </DepthButton>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
       </Modal>
 
       <Modal
@@ -277,7 +303,7 @@ export default function WishlistScreen() {
         <View style={styles.confirmOverlay}>
           <View style={[styles.confirmContainer, { backgroundColor: theme.colors.card }]}>
             <Text style={[styles.confirmTitle, styles.fontBold, { color: theme.colors.text }]}>
-              {TEXT.wishlist.removeProduct}
+              {TEXT.wishlist.removeGoal}
             </Text>
             <Text
               style={[
@@ -322,6 +348,12 @@ export default function WishlistScreen() {
           </View>
         </View>
       </Modal>
+
+      <AddGoalModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
+        goldPrice={goldPrice?.price}
+      />
     </View>
   );
 }

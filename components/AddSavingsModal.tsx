@@ -1,14 +1,6 @@
 import { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { DollarSign, Coins, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreateSavingsLog } from '@/lib/hooks/useSavingsLogs';
@@ -18,6 +10,7 @@ import { TEXT } from '@/constants/text';
 import { persianToEnglish, englishToPersian } from '@/utils/numbers';
 import GlassInput from './ui/GlassInput';
 import DepthButton from './ui/DepthButton';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface AddSavingsModalProps {
   visible: boolean;
@@ -32,11 +25,9 @@ export default function AddSavingsModal({ visible, onClose }: AddSavingsModalPro
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [selectedType, setSelectedType] = useState<'money' | 'gold'>('money');
-  const [selectedProductId, setSelectedProductId] = useState<string | undefined>();
+  const [selectedGoalId, setSelectedGoalId] = useState<string | undefined>();
 
   // Memoized styles for dynamic theming and RTL support
-  const keyboardAvoidingViewStyle = useMemo(() => ({ flex: 1 }), []);
-
   const modalContainerStyle = useMemo(
     () => ({ flex: 1, backgroundColor: theme.colors.background }),
     [theme.colors.background]
@@ -118,7 +109,7 @@ export default function AddSavingsModal({ visible, onClose }: AddSavingsModalPro
       await createSavingsLog.mutateAsync({
         amount: parsedAmount,
         type: selectedType,
-        productId: selectedProductId,
+        goalId: selectedGoalId,
         note: note || undefined,
       });
 
@@ -133,7 +124,7 @@ export default function AddSavingsModal({ visible, onClose }: AddSavingsModalPro
   const resetForm = () => {
     setAmount('');
     setNote('');
-    setSelectedProductId(undefined);
+    setSelectedGoalId(undefined);
     setSelectedType('money');
   };
 
@@ -171,135 +162,137 @@ export default function AddSavingsModal({ visible, onClose }: AddSavingsModalPro
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={keyboardAvoidingViewStyle}
-      >
-        <View style={[styles.modalContainer, modalContainerStyle]}>
-          <View style={[styles.modalHeader, modalHeaderStyle, modalHeaderSafeAreaStyle]}>
-            <Text style={[styles.modalTitle, modalTitleStyle]}>{TEXT.history.addSavings}</Text>
-            <TouchableOpacity onPress={handleClose}>
-              <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
-            </TouchableOpacity>
+      <View style={styles.modalContainer}>
+        <LinearGradient
+          colors={[theme.colors.background, theme.colors.backgroundSecondary]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <View style={[styles.modalHeader, modalHeaderStyle, modalHeaderSafeAreaStyle]}>
+          <Text style={[styles.modalTitle, modalTitleStyle]}>{TEXT.history.addSavings}</Text>
+          <TouchableOpacity onPress={handleClose}>
+            <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAwareScrollView
+          style={styles.modalContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          enableOnAndroid={true}
+          enableAutomaticScroll={true}
+          extraScrollHeight={20}
+        >
+          {/* Type Selector */}
+          <View style={styles.inputGroup}>
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: theme.colors.text,
+                  marginBottom: theme.spacing.sm,
+                },
+              ]}
+            >
+              {TEXT.history.savingsType}
+            </Text>
+            <View style={dynamicStyles.typeSelector}>
+              <TouchableOpacity
+                style={[dynamicStyles.typeButton, moneyTypeButtonStyle]}
+                onPress={() => setSelectedType('money')}
+              >
+                <DollarSign
+                  size={18}
+                  color={
+                    selectedType === 'money' ? theme.colors.success : theme.colors.textSecondary
+                  }
+                />
+                <Text style={[dynamicStyles.typeButtonText, moneyTypeTextStyle]}>
+                  {TEXT.history.money}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[dynamicStyles.typeButton, goldTypeButtonStyle]}
+                onPress={() => setSelectedType('gold')}
+              >
+                <Coins
+                  size={18}
+                  color={
+                    selectedType === 'gold' ? theme.colors.primary : theme.colors.textSecondary
+                  }
+                />
+                <Text style={[dynamicStyles.typeButtonText, goldTypeTextStyle]}>
+                  {TEXT.history.gold}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <ScrollView
-            style={styles.modalContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Type Selector */}
-            <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: theme.colors.text,
-                    marginBottom: theme.spacing.sm,
-                  },
-                ]}
-              >
-                {TEXT.history.savingsType}
-              </Text>
-              <View style={dynamicStyles.typeSelector}>
-                <TouchableOpacity
-                  style={[dynamicStyles.typeButton, moneyTypeButtonStyle]}
-                  onPress={() => setSelectedType('money')}
-                >
-                  <DollarSign
-                    size={18}
-                    color={
-                      selectedType === 'money' ? theme.colors.success : theme.colors.textSecondary
-                    }
-                  />
-                  <Text style={[dynamicStyles.typeButtonText, moneyTypeTextStyle]}>
-                    {TEXT.history.money}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[dynamicStyles.typeButton, goldTypeButtonStyle]}
-                  onPress={() => setSelectedType('gold')}
-                >
-                  <Coins
-                    size={18}
-                    color={
-                      selectedType === 'gold' ? theme.colors.primary : theme.colors.textSecondary
-                    }
-                  />
-                  <Text style={[dynamicStyles.typeButtonText, goldTypeTextStyle]}>
-                    {TEXT.history.gold}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+          {/* Amount Input */}
+          <View style={styles.inputGroup}>
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: theme.colors.text,
+                  marginBottom: theme.spacing.sm,
+                },
+              ]}
+            >
+              {selectedType === 'money' ? TEXT.history.amount : TEXT.history.goldAmount}
+            </Text>
+            <GlassInput
+              icon={
+                selectedType === 'money' ? (
+                  <DollarSign size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                ) : (
+                  <Coins size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
+                )
+              }
+              placeholder={
+                selectedType === 'money'
+                  ? TEXT.history.amountPlaceholder
+                  : TEXT.history.goldAmountPlaceholder
+              }
+              value={amount}
+              onChangeText={handleAmountChange}
+              keyboardType="numeric"
+            />
+          </View>
 
-            {/* Amount Input */}
-            <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: theme.colors.text,
-                    marginBottom: theme.spacing.sm,
-                  },
-                ]}
-              >
-                {selectedType === 'money' ? TEXT.history.amount : TEXT.history.goldAmount}
-              </Text>
-              <GlassInput
-                icon={
-                  selectedType === 'money' ? (
-                    <DollarSign size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
-                  ) : (
-                    <Coins size={20} color={theme.colors.textSecondary} strokeWidth={2.5} />
-                  )
-                }
-                placeholder={
-                  selectedType === 'money'
-                    ? TEXT.history.amountPlaceholder
-                    : TEXT.history.goldAmountPlaceholder
-                }
-                value={amount}
-                onChangeText={handleAmountChange}
-                keyboardType="numeric"
-              />
-            </View>
+          {/* Note Input */}
+          <View style={styles.inputGroup}>
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: theme.colors.text,
+                  marginBottom: theme.spacing.sm,
+                },
+              ]}
+            >
+              {TEXT.history.note} ({TEXT.history.optional})
+            </Text>
+            <GlassInput
+              placeholder={TEXT.history.notePlaceholder}
+              value={note}
+              onChangeText={setNote}
+              multiline
+            />
+          </View>
 
-            {/* Note Input */}
-            <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: theme.colors.text,
-                    marginBottom: theme.spacing.sm,
-                  },
-                ]}
-              >
-                {TEXT.history.note} ({TEXT.history.optional})
-              </Text>
-              <GlassInput
-                placeholder={TEXT.history.notePlaceholder}
-                value={note}
-                onChangeText={setNote}
-                multiline
-              />
-            </View>
-
-            {/* Save Button */}
-            <View style={styles.buttonGroup}>
-              <DepthButton
-                onPress={handleAddSavings}
-                disabled={createSavingsLog.isPending || !amount}
-                variant="primary"
-                size="large"
-              >
-                {createSavingsLog.isPending ? TEXT.common.loading : TEXT.common.save}
-              </DepthButton>
-            </View>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+          {/* Save Button */}
+          <View style={styles.buttonGroup}>
+            <DepthButton
+              onPress={handleAddSavings}
+              disabled={createSavingsLog.isPending || !amount}
+              variant="primary"
+              size="large"
+            >
+              {createSavingsLog.isPending ? TEXT.common.loading : TEXT.common.save}
+            </DepthButton>
+          </View>
+        </KeyboardAwareScrollView>
+      </View>
     </Modal>
   );
 }

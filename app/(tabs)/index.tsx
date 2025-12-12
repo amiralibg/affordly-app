@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { use18KGoldPrice } from '@/lib/hooks/useGold';
 import { Plus, Coins, TrendingUp } from 'lucide-react-native';
-import AddProductModal from '@/components/AddProductModal';
+import AddGoalModal from '@/components/AddGoalModal';
 import GoldPriceChart from '@/components/GoldPriceChart';
 import { useTheme } from '@/contexts/ThemeContext';
 import { TEXT, formatNumber } from '@/constants/text';
 import StatCard from '@/components/ui/StatCard';
 import DepthButton from '@/components/ui/DepthButton';
 import AppHeader from '@/components/AppHeader';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function CalculateScreen() {
   const { data: goldPrice, isLoading } = use18KGoldPrice();
@@ -16,7 +17,13 @@ export default function CalculateScreen() {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={styles.container}>
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.backgroundSecondary]}
+        style={StyleSheet.absoluteFillObject}
+      />
+      
       <AppHeader />
 
       <ScrollView
@@ -50,17 +57,18 @@ export default function CalculateScreen() {
               style={{ marginBottom: theme.spacing.lg }}
             />
 
-            {/* Price trend indicator (placeholder) */}
+            {/* Price trend indicator */}
             <View
               style={[
                 styles.trendCard,
                 {
-                  backgroundColor: theme.colors.cardElevated,
+                  backgroundColor: theme.colors.backgroundTertiary, // Cleaner look than elevated
                   borderRadius: theme.radius.md,
                   padding: theme.spacing.md,
                   marginBottom: theme.spacing.lg,
+                  borderColor: theme.colors.borderLight,
+                  borderWidth: 1,
                 },
-                theme.shadows.small,
               ]}
             >
               <View style={styles.trendHeader}>
@@ -101,11 +109,11 @@ export default function CalculateScreen() {
           icon={<Plus size={24} color={theme.isDark ? '#0A0A0A' : '#FFFFFF'} strokeWidth={2.5} />}
           iconPosition="left"
         >
-          {TEXT.calculate.addNewProduct}
+          {TEXT.calculate.addNewGoal}
         </DepthButton>
       </ScrollView>
 
-      <AddProductModal
+      <AddGoalModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         goldPrice={goldPrice?.price}

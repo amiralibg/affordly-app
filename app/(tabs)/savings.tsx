@@ -9,21 +9,22 @@ import {
   Modal,
 } from 'react-native';
 import { useSavingsLogs, useDeleteSavingsLog } from '@/lib/hooks/useSavingsLogs';
-import { useProducts } from '@/lib/hooks/useProducts';
+import { useGoals } from '@/lib/hooks/useGoals';
 import { use18KGoldPrice } from '@/lib/hooks/useGold';
 import { History as HistoryIcon, Plus, Trash2, DollarSign, Coins } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { showToast } from '@/lib/toast';
-import { TEXT, formatNumber, formatDate } from '@/constants/text';
+import { TEXT, formatNumber, formatDate, formatDecimal } from '@/constants/text';
 import { formatGoldWeight } from '@/lib/utils/goldUnits';
 import AddSavingsModal from '@/components/AddSavingsModal';
 import DepthButton from '@/components/ui/DepthButton';
 import AppHeader from '@/components/AppHeader';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SavingsScreen() {
   const { data: savingsLogs = [], isLoading } = useSavingsLogs();
   const deleteSavingsLog = useDeleteSavingsLog();
-  const { data: _products = [] } = useProducts();
+  const { data: _goals = [] } = useGoals();
   const { data: goldPrice } = use18KGoldPrice();
   const { theme } = useTheme();
 
@@ -222,7 +223,11 @@ export default function SavingsScreen() {
   });
 
   return (
-    <View style={containerStyle}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.backgroundSecondary]}
+        style={StyleSheet.absoluteFillObject}
+      />
       <AppHeader />
       <ScrollView
         style={dynamicStyles.logsList}
@@ -241,7 +246,7 @@ export default function SavingsScreen() {
           <View style={dynamicStyles.summaryRow}>
             <View>
               <Text style={dynamicStyles.summaryValue}>
-                {formatNumber(totals.gold)} {TEXT.common.gram}
+                {formatDecimal(totals.gold)} {TEXT.common.gram}
               </Text>
               {goldPrice && (
                 <Text style={dynamicStyles.summaryLabel}>
@@ -299,7 +304,7 @@ export default function SavingsScreen() {
                   <Text style={dynamicStyles.logAmount}>
                     {log.type === 'money'
                       ? `${formatNumber(log.amount)} ${TEXT.common.toman}`
-                      : `${formatNumber(goldFormatted.primary.value)} ${goldFormatted.primary.unit}`}
+                      : `${formatDecimal(goldFormatted.primary.value)} ${goldFormatted.primary.unit}`}
                   </Text>
                   {log.type === 'gold' && goldPrice && (
                     <Text style={dynamicStyles.logNote}>
@@ -311,9 +316,9 @@ export default function SavingsScreen() {
                       {log.note}
                     </Text>
                   )}
-                  {log.productId && (
+                  {log.goalId && (
                     <Text style={dynamicStyles.logNote} numberOfLines={1}>
-                      {TEXT.history.for}: {log.productId.name}
+                      {TEXT.history.for}: {log.goalId.name}
                     </Text>
                   )}
                   <Text style={dynamicStyles.logDate}>{formatDate(log.date)}</Text>
@@ -370,3 +375,109 @@ export default function SavingsScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // ... (styles are same as before, no changes needed in styles object usually unless class names changed)
+  // But wait, I need to make sure I didn't lose the styles.
+  // The previous file content had styles defined at the bottom.
+  // I will copy them back or use the same styles.
+  // Since I am rewriting the file, I must include the styles.
+  // I'll assume the styles are the same as in the read file.
+  confirmButton: {
+    alignItems: 'center',
+    borderRadius: 12,
+    flex: 1,
+    padding: 14,
+  },
+  confirmButtonCancel: {
+    borderWidth: 1,
+  },
+  confirmButtonDelete: {},
+  confirmButtonText: {
+    fontSize: 16,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  confirmContainer: {
+    borderRadius: 20,
+    maxWidth: 400,
+    padding: 24,
+    width: '100%',
+  },
+  confirmMessage: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'right',
+  },
+  confirmOverlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    marginBottom: 12,
+    textAlign: 'right',
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  fontBold: {
+    fontFamily: 'Vazirmatn_700Bold',
+  },
+  fontRegular: {
+    fontFamily: 'Vazirmatn_400Regular',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  modalContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+  },
+  modalContent: {
+    padding: 24,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 24,
+  },
+  modalLabel: {
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: 'right',
+  },
+  modalOverlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalTitle: {
+    fontSize: 20,
+  },
+});

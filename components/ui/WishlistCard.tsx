@@ -7,7 +7,7 @@ import DepthButton from './DepthButton';
 import { englishToPersian } from '@/utils/numbers';
 
 interface WishlistCardProps {
-  productName: string;
+  goalName: string;
   price: string;
   goldEquivalent: string;
   savedGold: string;
@@ -17,10 +17,12 @@ interface WishlistCardProps {
   onAddGold: () => void;
   onDelete: () => void;
   goalReached: boolean;
+  savedAmountInToman?: number;
+  remainingInToman?: number;
 }
 
 export default function WishlistCard({
-  productName,
+  goalName,
   price,
   goldEquivalent,
   savedGold,
@@ -30,8 +32,16 @@ export default function WishlistCard({
   onAddGold,
   onDelete,
   goalReached,
+  savedAmountInToman,
+  remainingInToman,
 }: WishlistCardProps) {
   const { theme } = useTheme();
+
+  // Helper to format Toman values
+  const formatToman = (value: number | undefined) => {
+    if (value === undefined) return null;
+    return `${englishToPersian(Math.round(value).toLocaleString())} تومان`;
+  };
 
   return (
     <ElevatedCard
@@ -46,14 +56,14 @@ export default function WishlistCard({
         </TouchableOpacity>
         <Text
           style={[
-            styles.productName,
+            styles.goalName,
             {
               color: theme.colors.text,
             },
           ]}
           numberOfLines={1}
         >
-          {productName}
+          {goalName}
         </Text>
       </View>
 
@@ -87,11 +97,27 @@ export default function WishlistCard({
           <Text style={[styles.goldLabel, { color: theme.colors.textSecondary }]}>معادل طلا</Text>
         </View>
         <View style={styles.goldRow}>
-          <Text style={[styles.goldValue, { color: theme.colors.success }]}>{savedGold}</Text>
+          <View style={styles.goldValueContainer}>
+            <Text style={[styles.goldValue, { color: theme.colors.success }]}>{savedGold}</Text>
+            {savedAmountInToman && (
+              <Text style={[styles.goldSubValue, { color: theme.colors.textTertiary }]}>
+                ({formatToman(savedAmountInToman)})
+              </Text>
+            )}
+          </View>
           <Text style={[styles.goldLabel, { color: theme.colors.textSecondary }]}>ذخیره شده</Text>
         </View>
         <View style={styles.goldRow}>
-          <Text style={[styles.goldValue, { color: theme.colors.textTertiary }]}>{remaining}</Text>
+          <View style={styles.goldValueContainer}>
+            <Text style={[styles.goldValue, { color: theme.colors.textTertiary }]}>
+              {remaining}
+            </Text>
+            {remainingInToman && (
+              <Text style={[styles.goldSubValue, { color: theme.colors.textTertiary }]}>
+                ({formatToman(remainingInToman)})
+              </Text>
+            )}
+          </View>
           <Text style={[styles.goldLabel, { color: theme.colors.textSecondary }]}>باقی مانده</Text>
         </View>
       </View>
@@ -215,6 +241,10 @@ const styles = StyleSheet.create({
   goalBadge: {
     alignItems: 'center',
   },
+  goalName: {
+    fontFamily: 'Vazirmatn_700Bold',
+    fontSize: 22,
+  },
   goalText: {
     fontFamily: 'Vazirmatn_700Bold',
     fontSize: 15,
@@ -232,9 +262,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  goldSubValue: {
+    fontFamily: 'Vazirmatn_400Regular',
+    fontSize: 11,
+    marginTop: 2,
+  },
   goldValue: {
     fontFamily: 'Vazirmatn_700Bold',
     fontSize: 14,
+  },
+  goldValueContainer: {
+    alignItems: 'flex-start',
   },
   header: {
     alignItems: 'center',
@@ -245,10 +283,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Vazirmatn_400Regular',
     fontSize: 18,
     textAlign: 'right',
-  },
-  productName: {
-    fontFamily: 'Vazirmatn_700Bold',
-    fontSize: 22,
   },
   progressContainer: {
     alignItems: 'center',

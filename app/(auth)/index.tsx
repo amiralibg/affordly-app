@@ -1,14 +1,6 @@
 import { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useSignIn, useSignUp } from '@/lib/hooks/useAuth';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -124,123 +116,122 @@ export default function AuthScreen() {
   const loading = signInMutation.isPending || signUpMutation.isPending;
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardAwareScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      enableOnAndroid={true}
+      enableAutomaticScroll={true}
+      extraScrollHeight={20}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View
-            style={[styles.iconContainer, { backgroundColor: theme.colors.backgroundSecondary }]}
-          >
-            <WalletIcon size={48} color={theme.colors.primary} />
-          </View>
-          <Text
-            style={[styles.title, { color: theme.colors.text, fontFamily: 'Vazirmatn_700Bold' }]}
-          >
-            {TEXT.auth.appName}
-          </Text>
-          <Text
-            style={[
-              styles.subtitle,
-              { color: theme.colors.textSecondary, fontFamily: 'Vazirmatn_400Regular' },
-            ]}
-          >
-            {TEXT.auth.appTagline}
-          </Text>
+      <View style={styles.header}>
+        <View style={[styles.iconContainer, { backgroundColor: theme.colors.backgroundSecondary }]}>
+          <WalletIcon size={48} color={theme.colors.primary} />
         </View>
+        <Text style={[styles.title, { color: theme.colors.text, fontFamily: 'Vazirmatn_700Bold' }]}>
+          {TEXT.auth.appName}
+        </Text>
+        <Text
+          style={[
+            styles.subtitle,
+            { color: theme.colors.textSecondary, fontFamily: 'Vazirmatn_400Regular' },
+          ]}
+        >
+          {TEXT.auth.appTagline}
+        </Text>
+      </View>
 
-        <View style={styles.form}>
-          {isSignUp && (
-            <TextInput
-              style={[styles.input, nameInputStyle, { fontFamily: 'Vazirmatn_400Regular' }]}
-              placeholder={TEXT.auth.name}
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                if (errors.name && text) {
-                  setErrors({ ...errors, name: false });
-                }
-              }}
-              autoCapitalize="words"
-              placeholderTextColor={theme.colors.textTertiary}
-            />
-          )}
-
+      <View style={styles.form}>
+        {isSignUp && (
           <TextInput
-            style={[styles.input, emailInputStyle, { fontFamily: 'Vazirmatn_400Regular' }]}
-            placeholder={TEXT.auth.email}
-            value={email}
+            style={[styles.input, nameInputStyle, { fontFamily: 'Vazirmatn_400Regular' }]}
+            placeholder={TEXT.auth.name}
+            value={name}
             onChangeText={(text) => {
-              setEmail(text);
-              if (errors.email && text) {
-                setErrors({ ...errors, email: false });
+              setName(text);
+              if (errors.name && text) {
+                setErrors({ ...errors, name: false });
               }
             }}
-            autoCapitalize="none"
-            keyboardType="email-address"
+            autoCapitalize="words"
             placeholderTextColor={theme.colors.textTertiary}
           />
+        )}
 
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[
-                styles.passwordInput,
-                passwordInputStyle,
-                { fontFamily: 'Vazirmatn_400Regular' },
-              ]}
-              placeholder={TEXT.auth.password}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errors.password && text) {
-                  setErrors({ ...errors, password: false });
-                }
-              }}
-              secureTextEntry={!showPassword}
-              placeholderTextColor={theme.colors.textTertiary}
-            />
-            <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
-              {showPassword ? (
-                <EyeOff size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-              ) : (
-                <Eye size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-              )}
-            </TouchableOpacity>
-          </View>
+        <TextInput
+          style={[styles.input, emailInputStyle, { fontFamily: 'Vazirmatn_400Regular' }]}
+          placeholder={TEXT.auth.email}
+          value={email}
+          onChangeText={(text) => {
+            setEmail(text);
+            if (errors.email && text) {
+              setErrors({ ...errors, email: false });
+            }
+          }}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          placeholderTextColor={theme.colors.textTertiary}
+        />
 
-          <TouchableOpacity
+        <View style={styles.passwordContainer}>
+          <TextInput
             style={[
-              styles.button,
-              { backgroundColor: theme.colors.primary },
-              loading && styles.buttonDisabled,
+              styles.passwordInput,
+              passwordInputStyle,
+              { fontFamily: 'Vazirmatn_400Regular' },
             ]}
-            onPress={handleAuth}
-            disabled={loading}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                { color: theme.colors.background, fontFamily: 'Vazirmatn_700Bold' },
-              ]}
-            >
-              {loading ? TEXT.common.loading : isSignUp ? TEXT.auth.signUp : TEXT.auth.signIn}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.switchButton} onPress={() => setIsSignUp(!isSignUp)}>
-            <Text
-              style={[
-                styles.switchButtonText,
-                { color: theme.colors.primary, fontFamily: 'Vazirmatn_400Regular' },
-              ]}
-            >
-              {isSignUp ? TEXT.auth.alreadyHaveAccount : TEXT.auth.noAccount}
-            </Text>
+            placeholder={TEXT.auth.password}
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errors.password && text) {
+                setErrors({ ...errors, password: false });
+              }
+            }}
+            secureTextEntry={!showPassword}
+            placeholderTextColor={theme.colors.textTertiary}
+          />
+          <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+            {showPassword ? (
+              <EyeOff size={20} color={theme.colors.textSecondary} strokeWidth={2} />
+            ) : (
+              <Eye size={20} color={theme.colors.textSecondary} strokeWidth={2} />
+            )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: theme.colors.primary },
+            loading && styles.buttonDisabled,
+          ]}
+          onPress={handleAuth}
+          disabled={loading}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              { color: theme.colors.background, fontFamily: 'Vazirmatn_700Bold' },
+            ]}
+          >
+            {loading ? TEXT.common.loading : isSignUp ? TEXT.auth.signUp : TEXT.auth.signIn}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.switchButton} onPress={() => setIsSignUp(!isSignUp)}>
+          <Text
+            style={[
+              styles.switchButtonText,
+              { color: theme.colors.primary, fontFamily: 'Vazirmatn_400Regular' },
+            ]}
+          >
+            {isSignUp ? TEXT.auth.alreadyHaveAccount : TEXT.auth.noAccount}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }
 

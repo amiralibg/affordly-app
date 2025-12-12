@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface DepthButtonProps {
   children: React.ReactNode;
@@ -25,13 +26,7 @@ interface DepthButtonProps {
 }
 
 /**
- * DepthButton - A button component with depth and elevation
- *
- * Variants:
- * - primary: Solid background with primary color + glow shadow
- * - secondary: Lighter background with subtle shadow
- * - outline: Border only with hover effect
- * - ghost: No background, text only
+ * DepthButton - Premium 3D-feel button with gradients
  */
 export default function DepthButton({
   children,
@@ -47,23 +42,18 @@ export default function DepthButton({
 }: DepthButtonProps) {
   const { theme } = useTheme();
 
-  const getBackgroundColor = () => {
+  const getGradientColors = () => {
     if (disabled) {
-      return variant === 'ghost' ? 'transparent' : theme.colors.cardBorder;
+      return [theme.colors.cardBorder, theme.colors.cardBorder];
     }
-
-    switch (variant) {
-      case 'primary':
-        return theme.colors.primary;
-      case 'secondary':
-        return theme.colors.cardElevated;
-      case 'outline':
-        return 'transparent';
-      case 'ghost':
-        return 'transparent';
-      default:
-        return theme.colors.primary;
+    
+    if (variant === 'primary') {
+      return theme.colors.primaryGradient;
     }
+    if (variant === 'secondary') {
+      return [theme.colors.cardElevated, theme.colors.cardElevated];
+    }
+    return ['transparent', 'transparent'];
   };
 
   const getTextColor = () => {
@@ -86,7 +76,7 @@ export default function DepthButton({
   };
 
   const getShadow = () => {
-    if (disabled || variant === 'ghost') {
+    if (disabled || variant === 'ghost' || variant === 'outline') {
       return theme.shadows.none;
     }
 
@@ -102,10 +92,10 @@ export default function DepthButton({
       case 'small':
         return { paddingVertical: 10, paddingHorizontal: 16 };
       case 'large':
-        return { paddingVertical: 18, paddingHorizontal: 28 };
+        return { paddingVertical: 16, paddingHorizontal: 32 };
       case 'medium':
       default:
-        return { paddingVertical: 14, paddingHorizontal: 22 };
+        return { paddingVertical: 14, paddingHorizontal: 24 };
     }
   };
 
@@ -121,34 +111,9 @@ export default function DepthButton({
     }
   };
 
-  const borderStyle =
-    variant === 'outline'
-      ? {
-          borderWidth: 2,
-          borderColor: disabled
-            ? theme.colors.cardBorder
-            : (style as ViewStyle)?.borderColor || theme.colors.primary,
-        }
-      : {};
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
-      style={[
-        styles.button,
-        {
-          backgroundColor: getBackgroundColor(),
-          borderRadius: theme.radius.lg,
-          ...getPadding(),
-        },
-        getShadow(),
-        borderStyle,
-        style,
-      ]}
-      activeOpacity={0.7}
-    >
-      {loading ? (
+  const ButtonContent = () => (
+    <View style={styles.contentContainer}>
+       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
         <>
@@ -168,21 +133,60 @@ export default function DepthButton({
           {icon && iconPosition === 'right' && <View style={styles.iconRight}>{icon}</View>}
         </>
       )}
+    </View>
+  );
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
+      style={[
+        styles.container,
+        getShadow(),
+        style,
+      ]}
+    >
+      <LinearGradient
+        colors={getGradientColors() as [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[
+          styles.gradient,
+          {
+            borderRadius: theme.radius.xl,
+            ...getPadding(),
+          },
+          variant === 'outline' && {
+            borderWidth: 2,
+            borderColor: disabled ? theme.colors.cardBorder : theme.colors.primary,
+          },
+        ]}
+      >
+        <ButtonContent />
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
+  container: {
+    // Container handles the shadow
+  },
+  contentContainer: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
   },
+  gradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   iconLeft: {
-    marginRight: 8,
+    marginRight: 10,
   },
   iconRight: {
-    marginLeft: 8,
+    marginLeft: 10,
   },
   text: {
     fontFamily: 'Vazirmatn_700Bold',

@@ -6,7 +6,7 @@ export const TEXT = {
     email: 'ایمیل',
     password: 'رمز عبور',
     name: 'نام',
-    appName: 'گلدیفای',
+    appName: 'گنجینو',
     appTagline: 'محاسبه کن چقدر طول می‌کشه تا چیزی که می‌خوای رو بخری',
     alreadyHaveAccount: 'قبلاً ثبت‌نام کردی؟ وارد شو',
     noAccount: 'حساب کاربری نداری؟ ثبت‌نام کن',
@@ -16,15 +16,15 @@ export const TEXT = {
   },
   calculate: {
     title: 'محاسبه طلا',
-    subtitle: 'قیمت محصول رو وارد کن تا معادل طلای اون رو ببینی',
+    subtitle: 'قیمت هدفت رو وارد کن تا معادل طلای اون رو ببینی',
     goldPrice: 'قیمت طلای ۱۸ عیار',
     perGram: 'هر گرم',
     fetchingGoldPrice: 'در حال دریافت قیمت طلا...',
     goldPriceError: 'خطا در دریافت قیمت طلا',
-    addNewProduct: 'افزودن محصول جدید',
-    newProduct: 'محصول جدید',
-    productName: 'نام محصول',
-    productNamePlaceholder: 'مثلاً: گوشی موبایل',
+    addNewGoal: 'افزودن هدف جدید',
+    newGoal: 'هدف جدید',
+    goalName: 'نام هدف',
+    goalNamePlaceholder: 'مثلاً: گوشی موبایل',
     price: 'قیمت (تومان)',
     goldEquivalent: 'معادل طلا',
     milligrams: 'میلی‌گرم',
@@ -33,19 +33,19 @@ export const TEXT = {
     sootDescription: 'سوت (واحد سنتی ایرانی برای طلا)',
     addToWishlist: 'افزودن به علاقه‌مندی‌ها',
     saveWithoutWishlist: 'ذخیره بدون افزودن',
-    wishlistHelp: 'با افزودن به علاقه‌مندی‌ها می‌تونی پیشرفت خریدت رو بر اساس طلا دنبال کنی',
+    wishlistHelp: 'با افزودن به علاقه‌مندی‌ها می‌تونی پیشرفت هدفت رو بر اساس طلا دنبال کنی',
     enterValidPrice: 'لطفاً قیمت معتبری وارد کن',
-    enterProductAndPrice: 'لطفاً نام و قیمت محصول رو وارد کن',
-    productAdded: 'انجام شد',
-    addedToWishlist: 'محصول به علاقه‌مندی‌ها اضافه شد',
-    productSaved: 'محصول ذخیره شد',
-    addProductError: 'خطا در افزودن محصول',
+    enterGoalAndPrice: 'لطفاً نام و قیمت هدف رو وارد کن',
+    goalAdded: 'انجام شد',
+    addedToWishlist: 'هدف به علاقه‌مندی‌ها اضافه شد',
+    goalSaved: 'هدف ذخیره شد',
+    addGoalError: 'خطا در افزودن هدف',
     priceMovement: 'تغییرات قیمت',
   },
   wishlist: {
     title: 'علاقه‌مندی‌ها',
-    subtitle: 'پیشرفت خرید محصولاتت رو با طلا دنبال کن',
-    noItems: 'هنوز هیچ محصولی به علاقه‌مندی‌ها اضافه نکردی',
+    subtitle: 'پیشرفت هدف‌هات رو با طلا دنبال کن',
+    noItems: 'هنوز هیچ هدفی به علاقه‌مندی‌ها اضافه نکردی',
     goldEquivalent: 'معادل طلا:',
     savedGold: 'طلای ذخیره‌شده:',
     remaining: 'باقی‌مانده:',
@@ -53,7 +53,7 @@ export const TEXT = {
     toman: 'تومان',
     addGold: 'افزودن طلا',
     goalReached: '✓ هدف به دست اومد!',
-    removeProduct: 'حذف محصول',
+    removeGoal: 'حذف هدف',
     removeConfirm: (name: string) => `آیا مطمئنی می‌خوای «${name}» رو حذف کنی؟`,
     cancel: 'انصراف',
     remove: 'حذف',
@@ -61,8 +61,9 @@ export const TEXT = {
     enterValidAmount: 'لطفاً مقدار معتبری وارد کن',
     goldUpdated: 'طلای ذخیره‌شده به‌روزرسانی شد',
     updateError: 'خطا در به‌روزرسانی',
-    deleteError: 'خطا در حذف محصول',
+    deleteError: 'خطا در حذف هدف',
     save: 'ذخیره',
+    addNewGoal: 'افزودن هدف جدید',
   },
   profile: {
     title: 'تنظیمات',
@@ -168,6 +169,13 @@ export const TEXT = {
 // Utility function to format numbers in Farsi
 export const formatNumber = (num: number): string => {
   return new Intl.NumberFormat('fa-IR').format(Math.round(num));
+};
+
+// Utility function to format decimals in Farsi (up to 3 decimal places)
+export const formatDecimal = (num: number): string => {
+  return new Intl.NumberFormat('fa-IR', {
+    maximumFractionDigits: 3,
+  }).format(num);
 };
 
 // Utility function to format dates in Farsi (Persian/Jalali calendar)

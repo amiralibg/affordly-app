@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { TrendingUp, TrendingDown } from 'lucide-react-native';
 import { TEXT, formatNumber as formatNumberUtil, formatDateShort } from '@/constants/text';
 import { englishToPersian } from '@/utils/numbers';
+import { BlurView } from 'expo-blur';
 
 interface GoldPriceChartProps {
   days?: number; // Number of days to show (default 30)
@@ -14,7 +15,7 @@ interface GoldPriceChartProps {
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function GoldPriceChart({ days = 30 }: GoldPriceChartProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   const { data, isLoading, error } = useGoldPriceHistory({ days });
 
@@ -58,12 +59,12 @@ export default function GoldPriceChart({ days = 30 }: GoldPriceChartProps) {
       marginTop: 8,
     },
     container: {
-      backgroundColor: theme.colors.card,
-      borderColor: theme.colors.border,
-      borderRadius: 20,
-      borderWidth: 1,
-      marginBottom: 20,
-      padding: 20,
+      borderRadius: 24,
+      marginTop: 24,
+      overflow: 'hidden',
+    },
+    contentContainer: {
+        padding: 20,
     },
     errorText: {
       color: theme.colors.error,
@@ -158,69 +159,75 @@ export default function GoldPriceChart({ days = 30 }: GoldPriceChartProps) {
 
   return (
     <View style={dynamicStyles.container}>
-      {/* Header with stats */}
-      <View style={dynamicStyles.header}>
-        <Text style={dynamicStyles.title}>{TEXT.charts.priceHistory}</Text>
-        <View style={dynamicStyles.statsRow}>
-          <View style={dynamicStyles.statBox}>
-            <Text style={dynamicStyles.statLabel}>{TEXT.charts.currentPrice}</Text>
-            <Text style={dynamicStyles.statValue}>{formatNumber(currentPrice)}</Text>
-          </View>
-          <View style={[dynamicStyles.statBox, statBoxRightAlignStyle]}>
-            <Text style={dynamicStyles.statLabel}>{TEXT.charts.change(days)}</Text>
-            <View style={dynamicStyles.changeBox}>
-              {isPositive ? (
-                <TrendingUp size={16} color={theme.colors.success} strokeWidth={2.5} />
-              ) : (
-                <TrendingDown size={16} color={theme.colors.error} strokeWidth={2.5} />
-              )}
-              <Text
-                style={[
-                  dynamicStyles.changeText,
-                  {
-                    color: isPositive ? theme.colors.success : theme.colors.error,
-                  },
-                ]}
-              >
-                {isPositive ? '+' : ''}
-                {englishToPersian(priceChangePercent.toFixed(1))}٪
-              </Text>
+       <BlurView
+        intensity={isDark ? 30 : 50}
+        tint={isDark ? 'dark' : 'light'}
+        style={dynamicStyles.contentContainer}
+      >
+        {/* Header with stats */}
+        <View style={dynamicStyles.header}>
+            <Text style={dynamicStyles.title}>{TEXT.charts.priceHistory}</Text>
+            <View style={dynamicStyles.statsRow}>
+            <View style={dynamicStyles.statBox}>
+                <Text style={dynamicStyles.statLabel}>{TEXT.charts.currentPrice}</Text>
+                <Text style={dynamicStyles.statValue}>{formatNumber(currentPrice)}</Text>
             </View>
-          </View>
+            <View style={[dynamicStyles.statBox, statBoxRightAlignStyle]}>
+                <Text style={dynamicStyles.statLabel}>{TEXT.charts.change(days)}</Text>
+                <View style={dynamicStyles.changeBox}>
+                {isPositive ? (
+                    <TrendingUp size={16} color={theme.colors.success} strokeWidth={2.5} />
+                ) : (
+                    <TrendingDown size={16} color={theme.colors.error} strokeWidth={2.5} />
+                )}
+                <Text
+                    style={[
+                    dynamicStyles.changeText,
+                    {
+                        color: isPositive ? theme.colors.success : theme.colors.error,
+                    },
+                    ]}
+                >
+                    {isPositive ? '+' : ''}
+                    {englishToPersian(priceChangePercent.toFixed(1))}٪
+                </Text>
+                </View>
+            </View>
+            </View>
         </View>
-      </View>
 
-      {/* Chart */}
-      <View style={dynamicStyles.chartWrapper}>
-        <LineChart
-          data={chartData}
-          width={screenWidth - 130}
-          height={180}
-          spacing={Math.max(20, (screenWidth - 130) / chartData.length)}
-          thickness={3}
-          color={theme.colors.primary}
-          startFillColor={theme.colors.primary}
-          endFillColor={theme.colors.primary}
-          startOpacity={0.3}
-          endOpacity={0.05}
-          initialSpacing={10}
-          endSpacing={10}
-          noOfSections={4}
-          yAxisColor="transparent"
-          xAxisColor={theme.colors.border}
-          yAxisTextStyle={yAxisTextStyle}
-          xAxisLabelTextStyle={xAxisLabelTextStyle}
-          xAxisLabelTexts={xAxisLabels}
-          xAxisLabelsHeight={24}
-          formatYLabel={(label) => formatNumber(parseFloat(label))}
-          hideDataPoints={chartData.length > 30}
-          dataPointsColor={theme.colors.primary}
-          dataPointsRadius={4}
-          curved
-          areaChart
-          hideRules
-        />
-      </View>
+        {/* Chart */}
+        <View style={dynamicStyles.chartWrapper}>
+            <LineChart
+            data={chartData}
+            width={screenWidth - 80}
+            height={180}
+            spacing={Math.max(20, (screenWidth - 80) / chartData.length)}
+            thickness={3}
+            color={theme.colors.primary}
+            startFillColor={theme.colors.primary}
+            endFillColor={theme.colors.primary}
+            startOpacity={0.3}
+            endOpacity={0.05}
+            initialSpacing={10}
+            endSpacing={10}
+            noOfSections={4}
+            yAxisColor="transparent"
+            xAxisColor={theme.colors.border}
+            yAxisTextStyle={yAxisTextStyle}
+            xAxisLabelTextStyle={xAxisLabelTextStyle}
+            xAxisLabelTexts={xAxisLabels}
+            xAxisLabelsHeight={24}
+            formatYLabel={(label) => formatNumber(parseFloat(label))}
+            hideDataPoints={chartData.length > 30}
+            dataPointsColor={theme.colors.primary}
+            dataPointsRadius={4}
+            curved
+            areaChart
+            hideRules
+            />
+        </View>
+      </BlurView>
     </View>
   );
 }
